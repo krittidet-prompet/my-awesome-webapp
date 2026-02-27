@@ -3,21 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deep Interactive Handout: SPSS Research</title>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>3D Interactive Research Dashboard | Group 2</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Vanilla Tilt -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { prompt: ['Prompt', 'sans-serif'] },
                     colors: {
-                        navy: '#0F172A',
-                        navy_light: '#1E293B',
-                        orange_main: '#F97316',
-                        yellow_main: '#FBBF24',
+                        dark_bg: '#0B1120',
+                        panel_bg: 'rgba(30, 41, 59, 0.6)',
+                        accent_orange: '#F97316',
+                        accent_yellow: '#FBBF24',
+                        accent_blue: '#38BDF8'
                     }
                 }
             }
@@ -25,331 +33,583 @@
     </script>
 
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #0F172A; color: #F8FAFC; overflow-x: hidden; }
+        body { font-family: 'Prompt', sans-serif; background-color: #0B1120; color: #F8FAFC; overflow-x: hidden; scroll-behavior: smooth; }
         
-        /* 3D Scene & Glassmorphism */
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        /* Glassmorphism */
+        .glass {
+            background: var(--panel_bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .clickable-card {
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform-style: preserve-3d;
-        }
+        /* Interactive Elements */
+        .interactive-card { cursor: pointer; transition: all 0.3s ease; }
+        .interactive-card:hover { border-color: rgba(249, 115, 22, 0.5); box-shadow: 0 10px 40px rgba(249, 115, 22, 0.2); transform: translateY(-5px); }
+        .interactive-card.blue:hover { border-color: rgba(56, 189, 248, 0.5); box-shadow: 0 10px 40px rgba(56, 189, 248, 0.2); }
 
-        .clickable-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(249, 115, 22, 0.2);
-        }
-
-        .pulse-hint {
-            animation: pulse-glow 2s infinite;
-        }
-
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(249, 115, 22, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
-        }
-
-        /* Modal Overlay */
+        /* Modal System */
         #modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(20px); z-index: 1000;
+            opacity: 0; transition: opacity 0.3s ease;
         }
-
-        #modal-content {
-            transform: scale(0.8);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
+        #modal-content { transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .show-modal { display: flex !important; opacity: 1 !important; }
-        .show-modal #modal-content { transform: scale(1) !important; }
+        .show-modal #modal-content { transform: scale(1) translateY(0); }
 
-        .stat-symbol { font-style: italic; font-family: 'Times New Roman', serif; }
+        /* Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .floating { animation: float 4s ease-in-out infinite; }
+        
+        .pulse-border { animation: pulse-border 2s infinite; }
+        @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); } 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); } }
 
-        .progress-bar { width: 0%; transition: width 2s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
-        .reveal.active { opacity: 1; transform: translateY(0); }
+        /* ThreeJS Container */
+        #threejs-canvas {
+            width: 100%; height: 450px; border-radius: 1.5rem; cursor: grab;
+            background: radial-gradient(circle at center, #1E293B 0%, #0B1120 100%);
+            border: 1px solid rgba(255,255,255,0.1); overflow: hidden;
+        }
+        #threejs-canvas:active { cursor: grabbing; }
+
+        .stat-font { font-family: 'Times New Roman', Times, serif; font-style: italic; }
     </style>
 </head>
-<body class="selection:bg-orange_main selection:text-white">
+<body class="selection:bg-accent_orange selection:text-white">
 
-    <!-- Modal System for Deep Information -->
-    <div id="modal-overlay" class="items-center justify-center p-4">
-        <div id="modal-content" class="glass-panel max-w-2xl w-full rounded-3xl p-8 border-t-4 border-orange_main relative shadow-2xl">
-            <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white transition">
-                <i class="fa-solid fa-xmark text-2xl"></i>
+    <!-- Deep Knowledge Extraction Modal -->
+    <div id="modal-overlay" class="items-center justify-center p-4 sm:p-6">
+        <div id="modal-content" class="glass max-w-4xl w-full rounded-3xl p-6 sm:p-10 relative border-t-4 border-accent_orange flex flex-col max-h-[90vh]">
+            <button onclick="closeModal()" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition z-50">
+                <i class="fa-solid fa-xmark text-xl"></i>
             </button>
-            <div id="modal-body">
-                <!-- Content Injected via JS -->
+            <div id="modal-body" class="overflow-y-auto pr-2 custom-scrollbar">
+                <!-- Dynamic Content Here -->
             </div>
         </div>
     </div>
 
-    <!-- Background 3D Elements -->
-    <div class="fixed top-0 left-0 w-full h-full -z-10 opacity-20 pointer-events-none">
-        <div class="absolute top-10 left-10 w-96 h-96 bg-orange_main rounded-full blur-[100px] animate-pulse"></div>
-        <div class="absolute bottom-10 right-10 w-80 h-80 bg-blue-500 rounded-full blur-[100px]"></div>
+    <!-- Ambient Background -->
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-accent_orange opacity-20 blur-[120px] rounded-full mix-blend-screen"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent_blue opacity-20 blur-[120px] rounded-full mix-blend-screen"></div>
     </div>
 
-    <!-- Header Section -->
-    <header class="relative z-10 pt-12 pb-16 px-6 max-w-7xl mx-auto text-center md:text-left">
-        <div class="flex flex-col md:flex-row justify-between items-center md:items-end gap-8">
-            <div class="flex-1">
-                <span class="inline-block bg-orange_main/20 text-orange_main px-4 py-1 rounded-full text-xs font-bold mb-4 border border-orange_main/30">
-                    <i class="fa-solid fa-microchip mr-2"></i> 260-511 INFORMATION TECHNOLOGY
-                </span>
-                <h1 class="text-3xl md:text-5xl font-extrabold leading-tight mb-4 text-white">
-                    ภาวะผู้นำการเปลี่ยนแปลงของผู้บริหารสถานศึกษา<br>ที่ส่งผลต่อพฤติกรรมเชิงนวัตกรรมของครู
+    <!-- HEADER -->
+    <header class="max-w-7xl mx-auto px-6 pt-16 pb-12">
+        <div class="flex flex-col lg:flex-row gap-10 items-center lg:items-end justify-between">
+            <div class="flex-1 text-center lg:text-left">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-accent_orange/30 text-accent_orange text-xs font-bold uppercase tracking-widest mb-6 pulse-border">
+                    <i class="fa-solid fa-microchip"></i> 260-511 IT for Ed. Admin & Research
+                </div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                    ภาวะผู้นำการเปลี่ยนแปลงของผู้บริหาร <br class="hidden sm:block">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent_orange to-accent_yellow">ที่ส่งผลต่อพฤติกรรมเชิงนวัตกรรมของครู</span>
                 </h1>
-                <p class="text-slate-400 text-lg">สพป.ปัตตานี เขต 1 | คลิกที่การ์ดตัวแปรเพื่อดูนิยามศัพท์เฉพาะ</p>
+                <p class="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto lg:mx-0">
+                    สังกัดสำนักงานเขตพื้นที่การศึกษาประถมศึกษาปัตตานี เขต 1 <br>
+                    เสนอ: รองศาสตราจารย์ ดร.ธีร หฤทัยธนาสันติ์
+                </p>
             </div>
             
-            <div class="glass-panel p-6 rounded-3xl text-sm w-full md:w-auto min-w-[320px]">
-                <h3 class="font-bold text-yellow_main mb-4 flex items-center border-b border-white/10 pb-2">
-                    <i class="fa-solid fa-users mr-2"></i> คณะผู้จัดทำกลุ่มที่ 2
+            <div class="glass p-6 rounded-2xl w-full lg:w-auto min-w-[300px]" data-tilt data-tilt-max="5" data-tilt-glare data-tilt-max-glare="0.2">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest border-b border-white/10 pb-3 mb-4 flex justify-between items-center">
+                    <span>คณะผู้จัดทำ (กลุ่มที่ 2)</span>
+                    <i class="fa-solid fa-users text-accent_yellow"></i>
                 </h3>
-                <div class="space-y-2 text-slate-300">
-                    <div class="flex justify-between gap-4"><span>นายกฤติเดช พรหมเพชร</span> <span class="opacity-50 text-[10px]">6720121202</span></div>
-                    <div class="flex justify-between gap-4"><span>นางนูรีดา กูโน</span> <span class="opacity-50 text-[10px]">6720121212</span></div>
-                    <div class="flex justify-between gap-4"><span>นางสาวภัคสุดา บุญแนบ</span> <span class="opacity-50 text-[10px]">6620121221</span></div>
-                    <div class="flex justify-between gap-4"><span>นางสาววรารัตน์ เครือทอง</span> <span class="opacity-50 text-[10px]">6720121228</span></div>
-                </div>
+                <ul class="space-y-3 text-sm text-slate-300">
+                    <li class="flex justify-between items-center"><span>นายกฤติเดช พรหมเพชร</span> <span class="text-xs text-slate-500 font-mono">6720121202</span></li>
+                    <li class="flex justify-between items-center"><span>นางนูรีดา กูโน</span> <span class="text-xs text-slate-500 font-mono">6720121212</span></li>
+                    <li class="flex justify-between items-center"><span>นางสาวภัคสุดา บุญแนบ</span> <span class="text-xs text-slate-500 font-mono">6620121221</span></li>
+                    <li class="flex justify-between items-center"><span>นางสาววรารัตน์ เครือทอง</span> <span class="text-xs text-slate-500 font-mono">6720121228</span></li>
+                </ul>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 relative z-10 pb-20">
-        
-        <!-- Interactive Conceptual Framework (X & Y) -->
-        <section class="reveal mb-16">
-            <div class="grid lg:grid-cols-12 gap-6 items-center">
-                <!-- INDEPENDENT VARIABLE (X) -->
-                <div class="lg:col-span-5">
-                    <div class="clickable-card glass-panel p-8 rounded-3xl border-l-8 border-orange_main pulse-hint" 
-                         onclick="openDetail('variable-x')" data-tilt data-tilt-max="5">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-orange_main font-bold tracking-widest text-xs">INDEPENDENT VARIABLE (X)</h3>
-                            <i class="fa-solid fa-magnifying-glass-plus text-orange_main/50"></i>
-                        </div>
-                        <h4 class="text-2xl font-bold mb-6 text-white">ภาวะผู้นำการเปลี่ยนแปลง</h4>
-                        <ul class="space-y-3 text-slate-400 text-sm">
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-orange_main text-[10px]"></i> การเป็นแบบอย่างที่มีอุดมการณ์</li>
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-orange_main text-[10px]"></i> การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</li>
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-orange_main text-[10px]"></i> การกระตุ้นทางปัญญา</li>
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-orange_main text-[10px]"></i> คลิกเพื่อดูรายละเอียดเพิ่มเติม...</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="lg:col-span-2 flex justify-center py-4">
-                    <div class="w-16 h-16 rounded-full bg-orange_main/20 flex items-center justify-center text-orange_main border border-orange_main/50 animate-bounce">
-                        <i class="fa-solid fa-arrow-right text-2xl"></i>
-                    </div>
-                </div>
+    <main class="max-w-7xl mx-auto px-6 pb-24 space-y-8">
 
-                <!-- DEPENDENT VARIABLE (Y) -->
-                <div class="lg:col-span-5">
-                    <div class="clickable-card glass-panel p-8 rounded-3xl border-l-8 border-blue-400 pulse-hint" 
-                         onclick="openDetail('variable-y')" data-tilt data-tilt-max="5">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-blue-400 font-bold tracking-widest text-xs">DEPENDENT VARIABLE (Y)</h3>
-                            <i class="fa-solid fa-magnifying-glass-plus text-blue-400/50"></i>
-                        </div>
-                        <h4 class="text-2xl font-bold mb-6 text-white">พฤติกรรมเชิงนวัตกรรมครู</h4>
-                        <ul class="space-y-3 text-slate-400 text-sm">
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-lightbulb text-blue-400 text-[10px]"></i> การสำรวจโอกาสใหม่</li>
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-lightbulb text-blue-400 text-[10px]"></i> การสร้างแนวคิดใหม่</li>
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-lightbulb text-blue-400 text-[10px]"></i> การนำแนวคิดไปปฏิบัติ</li>
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-lightbulb text-blue-400 text-[10px]"></i> คลิกเพื่อดูรายละเอียดเพิ่มเติม...</li>
-                        </ul>
-                    </div>
+        <!-- 1. CONCEPTUAL FRAMEWORK (Interactive Nodes) -->
+        <div class="flex items-center gap-4 mb-6">
+            <h2 class="text-xl font-bold uppercase tracking-widest text-white">01. กรอบแนวคิด (Conceptual Framework)</h2>
+            <div class="h-px bg-white/10 flex-1"></div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-6 items-center">
+            <!-- X Var -->
+            <div class="md:col-span-5 interactive-card glass p-8 rounded-[2rem] border-l-4 border-accent_orange" data-tilt onclick="openModal('var-x')">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-[10px] font-bold text-accent_orange uppercase tracking-widest bg-accent_orange/10 px-2 py-1 rounded">Independent (X)</span>
+                    <i class="fa-solid fa-expand text-slate-500 hover:text-white transition"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">ภาวะผู้นำการเปลี่ยนแปลง</h3>
+                <p class="text-slate-400 text-sm mb-4">คลิกเพื่อสกัดความรู้องค์ประกอบ 5 ด้าน (Knowledge Extraction)</p>
+                <div class="flex -space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#0B1120] flex items-center justify-center text-[10px] text-accent_orange"><i class="fa-solid fa-star"></i></div>
+                    <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#0B1120] flex items-center justify-center text-[10px] text-accent_orange"><i class="fa-solid fa-comment-dots"></i></div>
+                    <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#0B1120] flex items-center justify-center text-[10px] text-accent_orange"><i class="fa-solid fa-brain"></i></div>
                 </div>
             </div>
-        </section>
 
-        <!-- Main Statistical Section -->
-        <h2 class="text-2xl font-bold mb-8 text-white flex items-center gap-4 reveal">
-            <span class="w-12 h-1 bg-orange_main"></span> ผลการวิเคราะห์ข้อมูล SPSS
-        </h2>
+            <!-- Arrow -->
+            <div class="md:col-span-2 flex justify-center py-4">
+                <div class="w-16 h-16 rounded-full glass border border-white/10 flex items-center justify-center text-slate-400 floating">
+                    <i class="fa-solid fa-arrow-right-long text-2xl"></i>
+                </div>
+            </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            <div class="stat-card glass-panel p-6 rounded-3xl reveal text-center" data-tilt>
-                <p class="text-slate-400 text-xs mb-2">ค่าเฉลี่ยภาวะผู้นำ (X)</p>
-                <div class="text-4xl font-extrabold text-white mb-2"><span class="counter" data-target="4.40">0.00</span></div>
-                <div class="text-[10px] font-bold text-orange_main uppercase">ระดับการปฏิบัติ: มาก</div>
-            </div>
-            <div class="stat-card glass-panel p-6 rounded-3xl reveal text-center" data-tilt>
-                <p class="text-slate-400 text-xs mb-2">ค่าเฉลี่ยพฤติกรรมนวัตกรรม (Y)</p>
-                <div class="text-4xl font-extrabold text-blue-400 mb-2"><span class="counter" data-target="4.41">0.00</span></div>
-                <div class="text-[10px] font-bold text-blue-400 uppercase">ระดับการปฏิบัติ: มาก</div>
-            </div>
-            <div class="stat-card glass-panel p-6 rounded-3xl reveal text-center" data-tilt>
-                <p class="text-slate-400 text-xs mb-2">ความสัมพันธ์ (<span class="stat-symbol">r</span>)</p>
-                <div class="text-4xl font-extrabold text-yellow_main mb-2"><span class="counter" data-target="0.637">0.000</span></div>
-                <div class="text-[10px] font-bold text-yellow_main uppercase">สัมพันธ์ระดับ: สูง</div>
-            </div>
-            <div class="stat-card glass-panel p-6 rounded-3xl reveal text-center" data-tilt>
-                <p class="text-slate-400 text-xs mb-2">การพยากรณ์ (<span class="stat-symbol">R</span>²)</p>
-                <div class="text-4xl font-extrabold text-green-400 mb-2"><span class="counter" data-target="0.414">0.000</span></div>
-                <div class="text-[10px] font-bold text-green-400 uppercase">พยากรณ์ได้ร้อยละ: 41.40</div>
+            <!-- Y Var -->
+            <div class="md:col-span-5 interactive-card blue glass p-8 rounded-[2rem] border-l-4 border-accent_blue" data-tilt onclick="openModal('var-y')">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-[10px] font-bold text-accent_blue uppercase tracking-widest bg-accent_blue/10 px-2 py-1 rounded">Dependent (Y)</span>
+                    <i class="fa-solid fa-expand text-slate-500 hover:text-white transition"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">พฤติกรรมเชิงนวัตกรรม</h3>
+                <p class="text-slate-400 text-sm mb-4">คลิกเพื่อสกัดความรู้กระบวนการ 5 ขั้น (Knowledge Extraction)</p>
+                <div class="flex -space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#0B1120] flex items-center justify-center text-[10px] text-accent_blue"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#0B1120] flex items-center justify-center text-[10px] text-accent_blue"><i class="fa-solid fa-lightbulb"></i></div>
+                    <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#0B1120] flex items-center justify-center text-[10px] text-accent_blue"><i class="fa-solid fa-gears"></i></div>
+                </div>
             </div>
         </div>
 
-        <!-- Regression Chart Section -->
-        <div class="grid lg:grid-cols-2 gap-8 mb-16">
-            <div class="glass-panel p-8 rounded-3xl reveal" data-tilt data-tilt-max="2">
-                <h3 class="text-xl font-bold mb-8 flex items-center justify-between">
-                    <span><i class="fa-solid fa-chart-line mr-2 text-orange_main"></i> ตัวพยากรณ์ที่ดีที่สุด (Beta)</span>
-                </h3>
-                <div class="space-y-6">
-                    <div>
-                        <div class="flex justify-between mb-2 text-xs"><span>การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</span><span class="font-bold text-orange_main">β = .209</span></div>
-                        <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden"><div class="progress-bar h-full bg-orange_main" style="width: 85%"></div></div>
+        <!-- 2. STATS DASHBOARD -->
+        <div class="flex items-center gap-4 mt-16 mb-6">
+            <h2 class="text-xl font-bold uppercase tracking-widest text-white">02. ผลการวิเคราะห์สถิติ (SPSS Results)</h2>
+            <div class="h-px bg-white/10 flex-1"></div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div class="glass p-6 rounded-2xl text-center interactive-card" onclick="openModal('insight-mean')">
+                <p class="text-slate-400 text-[10px] sm:text-xs font-bold uppercase mb-2">Mean X (ผู้นำ)</p>
+                <div class="text-3xl sm:text-4xl font-black text-white counter" data-target="4.40">0.00</div>
+                <p class="text-[10px] text-accent_orange mt-2 font-bold">ระดับมาก</p>
+            </div>
+            <div class="glass p-6 rounded-2xl text-center interactive-card" onclick="openModal('insight-mean')">
+                <p class="text-slate-400 text-[10px] sm:text-xs font-bold uppercase mb-2">Mean Y (นวัตกรรม)</p>
+                <div class="text-3xl sm:text-4xl font-black text-accent_blue counter" data-target="4.41">0.00</div>
+                <p class="text-[10px] text-accent_blue mt-2 font-bold">ระดับมาก</p>
+            </div>
+            <div class="glass p-6 rounded-2xl text-center interactive-card" onclick="openModal('insight-corr')">
+                <p class="text-slate-400 text-[10px] sm:text-xs font-bold uppercase mb-2">Correlation (<span class="stat-font">r</span>)</p>
+                <div class="text-3xl sm:text-4xl font-black text-accent_yellow counter" data-target="0.637">0.000</div>
+                <p class="text-[10px] text-accent_yellow mt-2 font-bold">สัมพันธ์ทางบวกระดับสูง</p>
+            </div>
+            <div class="glass p-6 rounded-2xl text-center interactive-card" onclick="openModal('insight-diff')">
+                <p class="text-slate-400 text-[10px] sm:text-xs font-bold uppercase mb-2">Sig. (<span class="stat-font">p</span>)</p>
+                <div class="text-3xl sm:text-4xl font-black text-red-400"><.01</div>
+                <p class="text-[10px] text-red-400 mt-2 font-bold">คลิกดูความต่าง (เพศ/ขนาด)</p>
+            </div>
+        </div>
+
+        <!-- 3. 3D BETA PREDICTOR (The Climax) -->
+        <div class="flex items-center gap-4 mt-16 mb-6">
+            <h2 class="text-xl font-bold uppercase tracking-widest text-white">03. แก่นความรู้เชิงพยากรณ์ (Core Predictors)</h2>
+            <div class="h-px bg-white/10 flex-1"></div>
+        </div>
+
+        <div class="glass p-8 sm:p-12 rounded-[2.5rem] relative overflow-hidden interactive-card group border-accent_orange" onclick="open3DGraph()">
+            <div class="absolute inset-0 bg-gradient-to-br from-accent_orange/10 to-transparent opacity-50"></div>
+            
+            <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+                <div class="flex-1 text-center md:text-left">
+                    <div class="w-16 h-16 bg-accent_orange/20 text-accent_orange rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto md:mx-0 floating">
+                        <i class="fa-solid fa-cube"></i>
                     </div>
-                    <div>
-                        <div class="flex justify-between mb-2 text-xs"><span>การสนับสนุนศักยภาพรายบุคคล</span><span class="font-bold text-yellow_main">β = .194</span></div>
-                        <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden"><div class="progress-bar h-full bg-yellow_main" style="width: 78%"></div></div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between mb-2 text-xs"><span>การเป็นแบบอย่างที่มีอุดมการณ์</span><span class="font-bold text-slate-300">β = .176</span></div>
-                        <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden"><div class="progress-bar h-full bg-slate-400" style="width: 70%"></div></div>
+                    <h3 class="text-2xl sm:text-3xl font-black mb-4">ตัวพยากรณ์ที่ดีที่สุด (Multiple Regression)</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6 max-w-xl">
+                        เจาะลึก 3 ขุมพลังที่ขับเคลื่อนนวัตกรรมในสถานศึกษาได้ดีที่สุด คลิกเพื่อประมวลผลข้อมูลในรูปแบบ 
+                        <span class="text-accent_orange font-bold">3D Dynamic Graph</span> จำลองค่าเบต้า (<span class="stat-font">β</span>) แบบเรียลไทม์
+                    </p>
+                    <div class="inline-flex items-center gap-2 bg-accent_orange text-white text-xs font-bold px-6 py-3 rounded-full hover:bg-orange-600 transition shadow-lg shadow-orange-500/30">
+                        <i class="fa-solid fa-vr-cardboard"></i> เปิดใช้งานระบบ 3D Interactive
                     </div>
                 </div>
-            </div>
 
-            <div class="glass-panel p-8 rounded-3xl reveal flex flex-col justify-center border-l-8 border-orange_main">
-                <h3 class="text-xl font-bold mb-4 text-orange_main uppercase tracking-widest"><i class="fa-solid fa-lightbulb mr-2"></i> ข้อค้นพบสำคัญ</h3>
-                <p class="text-slate-300 text-base italic leading-relaxed">
-                    "ปัจจัยสำคัญในการส่งเสริมพฤติกรรมนวัตกรรม คือ การที่ผู้บริหารสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์ที่ชัดเจน ควบคู่กับการให้อำนาจการตัดสินใจรายบุคคล เพื่อให้ครูกล้าลงมือปฏิบัติจริงในห้องเรียน"
-                </p>
+                <div class="flex gap-4 sm:gap-8">
+                    <div class="text-center">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Predictive Power (R²)</p>
+                        <p class="text-4xl sm:text-5xl font-black text-green-400">41.4<span class="text-xl">%</span></p>
+                    </div>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <footer class="text-center py-12 text-slate-600 text-[10px] border-t border-white/5">
-        <p>© 2025 Education Administration | PSU Pattani - Group 2 Presentation</p>
+    <footer class="py-8 text-center border-t border-white/5">
+        <p class="text-slate-500 text-xs tracking-widest uppercase">© 2026 PSU Pattani | Group 2 Presentation</p>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+    <!-- JavaScript Engine -->
     <script>
-        const detailContent = {
-            'variable-x': {
-                title: 'รายละเอียด: ภาวะผู้นำการเปลี่ยนแปลง (X)',
-                body: `
-                    <div class="grid grid-cols-1 gap-4 mt-6">
-                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
-                            <h5 class="text-orange_main font-bold text-sm mb-1">1. การเป็นแบบอย่างที่มีอุดมการณ์</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">ผู้บริหารปฏิบัติตนสอดคล้องกับสิ่งที่พูดอย่างสม่ำเสมอ แสดงออกถึงความเสียสละ และเป็นต้นแบบที่น่าเชื่อถือ</p>
+        // Data Source for Modals (Knowledge Extraction Data)
+        const knowledgeData = {
+            'var-x': {
+                title: 'สกัดความรู้: ภาวะผู้นำการเปลี่ยนแปลง (X)',
+                icon: 'fa-star',
+                color: 'text-accent_orange',
+                content: `
+                    <p class="text-slate-300 text-sm mb-6 leading-relaxed">องค์ประกอบ 5 ด้านที่เป็นเครื่องมือของผู้บริหารในการเปลี่ยนแปลงวัฒนธรรมองค์กร:</p>
+                    <div class="grid gap-4">
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10 flex gap-4">
+                            <div class="text-accent_orange font-black text-xl">1</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การเป็นแบบอย่างที่มีอุดมการณ์</h4>
+                                <p class="text-xs text-slate-400">ปฏิบัติตนสอดคล้องกับคำพูด มีความโปร่งใส และเสียสละเพื่อส่วนรวมจนครูเกิดความศรัทธา</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
-                            <h5 class="text-orange_main font-bold text-sm mb-1">2. การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">การถ่ายทอดเรื่องราวสร้างแรงบันดาลใจเพื่อให้ครูเห็นเป้าหมายร่วมกัน และร่วมผลักดันวิสัยทัศน์สถานศึกษาให้เป็นจริง</p>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10 flex gap-4">
+                            <div class="text-accent_orange font-black text-xl">2</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</h4>
+                                <p class="text-xs text-slate-400">สื่อสารเป้าหมายที่ท้าทายในอนาคต ทำให้ครูรู้สึกว่างานที่ทำมีคุณค่าและมีความหมาย</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
-                            <h5 class="text-orange_main font-bold text-sm mb-1">3. การกระตุ้นทางปัญญา</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">ส่งเสริมให้ครูตั้งคำถาม ท้าทายวิธีปฏิบัติงานเดิม และสนับสนุนการทดลองใช้นวัตกรรมหรือวิธีการสอนใหม่ๆ</p>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10 flex gap-4">
+                            <div class="text-accent_orange font-black text-xl">3</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การกระตุ้นทางปัญญา</h4>
+                                <p class="text-xs text-slate-400">เปิดโอกาสให้ครูตั้งคำถามกับวิธีทำงานแบบเดิมๆ และสนับสนุนให้คิดวิธีแก้ปัญหาแบบใหม่</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
-                            <h5 class="text-orange_main font-bold text-sm mb-1">4. การสนับสนุนศักยภาพรายบุคคล</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">จดจำความเชี่ยวชาญพิเศษของครูแต่ละคน ให้คำปรึกษา และมอบอำนาจตัดสินใจให้ครูรับผิดชอบโครงการสำคัญ</p>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10 flex gap-4">
+                            <div class="text-accent_orange font-black text-xl">4</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การสนับสนุนศักยภาพรายบุคคล</h4>
+                                <p class="text-xs text-slate-400">ดูแลครูเป็นรายคน เข้าใจจุดแข็งจุดอ่อน และมอบหมายงานที่ส่งเสริมความก้าวหน้าเฉพาะตัว</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
-                            <h5 class="text-orange_main font-bold text-sm mb-1">5. การเสริมแรงเพื่อรักษาพฤติกรรม</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">การยกย่องชมเชยเมื่อมีผลงานที่ดี และจัดกิจกรรมเฉลิมฉลองความสำเร็จร่วมกันเพื่อสร้างความภาคภูมิใจในทีม</p>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10 flex gap-4">
+                            <div class="text-accent_orange font-black text-xl">5</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การเสริมแรงพฤติกรรมที่พึงประสงค์</h4>
+                                <p class="text-xs text-slate-400">ชื่นชม ให้รางวัล และจัดกิจกรรมเฉลิมฉลองเมื่อครูสามารถสร้างสรรค์สิ่งใหม่ได้สำเร็จ</p>
+                            </div>
                         </div>
                     </div>
                 `
             },
-            'variable-y': {
-                title: 'รายละเอียด: พฤติกรรมเชิงนวัตกรรมครู (Y)',
-                body: `
-                    <div class="grid grid-cols-1 gap-4 mt-6">
-                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                            <h5 class="text-blue-400 font-bold text-sm mb-1">1. การสำรวจโอกาสใหม่</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">การวิเคราะห์ปัญหาการเรียนรู้ของนักเรียน หรือปัญหาในชั้นเรียนเพื่อหาต้นตอและแนวทางการแก้ไขใหม่ๆ</p>
+            'var-y': {
+                title: 'สกัดความรู้: พฤติกรรมเชิงนวัตกรรม (Y)',
+                icon: 'fa-lightbulb',
+                color: 'text-accent_blue',
+                content: `
+                    <p class="text-slate-300 text-sm mb-6 leading-relaxed">5 ขั้นตอนการปฏิบัติงานของครูตั้งแต่ค้นพบปัญหาจนเกิดเป็นนวัตกรรมที่ยั่งยืน:</p>
+                    <div class="grid gap-4">
+                        <div class="bg-white/5 p-4 rounded-2xl border border-accent_blue/30 flex gap-4">
+                            <div class="text-accent_blue font-black text-xl">1</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การสำรวจโอกาสใหม่ (Idea Exploration)</h4>
+                                <p class="text-xs text-slate-400">มองเห็นปัญหาการเรียนรู้ในชั้นเรียน และเริ่มค้นคว้าหาช่องทางในการปรับปรุงแก้ไข</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                            <h5 class="text-blue-400 font-bold text-sm mb-1">2. การสร้างแนวคิดใหม่</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">การคิดค้น พัฒนาสื่อการสอน หรือกิจกรรมการเรียนรู้ใหม่ๆ ที่ชัดเจนเพื่อแก้ปัญหาและยกระดับคุณภาพผู้เรียน</p>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-accent_blue/30 flex gap-4">
+                            <div class="text-accent_blue font-black text-xl">2</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การสร้างแนวคิดใหม่ (Idea Generation)</h4>
+                                <p class="text-xs text-slate-400">ออกแบบและสร้างสื่อการสอน เทคนิค หรือกิจกรรมรูปแบบใหม่ (Prototype)</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                            <h5 class="text-blue-400 font-bold text-sm mb-1">3. การทำให้แนวคิดเป็นที่ยอมรับ</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">การปรึกษาหารือกับผู้บริหารและเพื่อนครู เพื่อขอการสนับสนุนด้านทรัพยากรและสร้างแนวร่วมในการใช้นวัตกรรม</p>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-accent_blue/30 flex gap-4">
+                            <div class="text-accent_blue font-black text-xl">3</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การทำให้แนวคิดเป็นที่ยอมรับ (Idea Championing)</h4>
+                                <p class="text-xs text-slate-400">นำเสนอไอเดียต่อผู้บริหารและเพื่อนครู เพื่อขอรับการสนับสนุนด้านทรัพยากรและความร่วมมือ</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                            <h5 class="text-blue-400 font-bold text-sm mb-1">4. การนำแนวคิดไปปฏิบัติ</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">การนำนวัตกรรมมาบูรณาการในแผนการสอนจริง และประเมินผลจากการเก็บข้อมูลนักเรียนเพื่อนำมาสะท้อนผล</p>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-accent_blue/30 flex gap-4">
+                            <div class="text-accent_blue font-black text-xl">4</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การนำแนวคิดไปปฏิบัติ (Idea Implementation)</h4>
+                                <p class="text-xs text-slate-400">นำนวัตกรรมไปใช้จริงในแผนการจัดการเรียนรู้ และเก็บข้อมูลผลสัมฤทธิ์ของนักเรียน</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                            <h5 class="text-blue-400 font-bold text-sm mb-1">5. การสะท้อนคิดเพื่อความยั่งยืน</h5>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">การทบทวนผลร่วมกับเพื่อนครู และพัฒนาต่อยอดนวัตกรรมที่สำเร็จให้กลายเป็นแนวปฏิบัติที่ดี (Best Practice)</p>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-accent_blue/30 flex gap-4">
+                            <div class="text-accent_blue font-black text-xl">5</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm mb-1">การสะท้อนคิดเพื่อความยั่งยืน (Reflection)</h4>
+                                <p class="text-xs text-slate-400">นำผลที่ได้มาวิเคราะห์ร่วมกับ PLC และปรับปรุงให้กลายเป็นวิธีปฏิบัติที่เป็นเลิศ (Best Practice)</p>
+                            </div>
                         </div>
                     </div>
                 `
+            },
+            'insight-diff': {
+                title: 'เจาะลึก: ความแตกต่าง (t-test & ANOVA)',
+                icon: 'fa-scale-balanced',
+                color: 'text-red-400',
+                content: `
+                    <div class="grid md:grid-cols-2 gap-6 mt-4">
+                        <div class="bg-gradient-to-br from-white/10 to-transparent p-6 rounded-3xl border border-white/10">
+                            <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-venus-mars"></i></div>
+                            <h4 class="font-bold text-white mb-2">มิติด้านเพศ (Gender)</h4>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                ทดสอบด้วย <span class="stat-font">t</span>-test พบว่า ผู้บริหารเพศชาย มีคะแนนด้าน <span class="text-accent_orange font-bold">"การสร้างแรงบันดาลใจ"</span> สูงกว่าเพศหญิง อย่างมีนัยสำคัญที่ระดับ .05
+                            </p>
+                        </div>
+                        <div class="bg-gradient-to-br from-white/10 to-transparent p-6 rounded-3xl border border-white/10">
+                            <div class="w-10 h-10 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-school"></i></div>
+                            <h4 class="font-bold text-white mb-2">มิติขนาดโรงเรียน (School Size)</h4>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                ทดสอบด้วย ANOVA พบว่า ครูในโรงเรียน <span class="text-accent_yellow font-bold">ขนาดเล็ก</span> มีพฤติกรรมเชิงนวัตกรรมสูงกว่า โรงเรียนขนาดกลาง อย่างมีนัยสำคัญที่ระดับ .05 (Post-hoc LSD)
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            'insight-mean': {
+                title: 'วิเคราะห์ระดับการปฏิบัติ (Descriptive)',
+                icon: 'fa-chart-pie',
+                color: 'text-white',
+                content: `<div class="text-center p-8"><p class="text-slate-300">ภาพรวมทั้งสองตัวแปรอยู่ในระดับ <strong>"มาก"</strong> แสดงให้เห็นว่า สพป.ปัตตานี เขต 1 มีบริบทพื้นฐานที่พร้อมต่อการขับเคลื่อนนวัตกรรมอยู่แล้ว ขาดเพียงการเร่งปฏิกิริยาในจุดที่ถูกต้อง</p></div>`
+            },
+            'insight-corr': {
+                title: 'วิเคราะห์ความสัมพันธ์ (Correlation)',
+                icon: 'fa-link',
+                color: 'text-accent_yellow',
+                content: `<div class="text-center p-8"><h2 class="text-5xl font-black text-accent_yellow mb-4">r = .637</h2><p class="text-slate-300">เป็นความสัมพันธ์เชิงบวกระดับ <strong>สูง</strong> แปลว่า ยิ่งผู้บริหารแสดงพฤติกรรมผู้นำการเปลี่ยนแปลงมากเท่าไหร่ ครูก็จะยิ่งกล้าสร้างสรรค์นวัตกรรมมากขึ้นเท่านั้น ไปในทิศทางเดียวกันอย่างชัดเจน</p></div>`
             }
         };
 
-        function openDetail(key) {
-            const modal = document.getElementById('modal-overlay');
+        // --- Core Functions ---
+        function openModal(key) {
+            const data = knowledgeData[key];
+            if(!data) return;
             const body = document.getElementById('modal-body');
-            const data = detailContent[key];
-            
-            body.innerHTML = `<h2 class="text-2xl font-black text-white">${data.title}</h2>${data.body}`;
-            modal.classList.add('show-modal');
+            body.innerHTML = `
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl ${data.color}">
+                        <i class="fa-solid ${data.icon}"></i>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-white pr-8">${data.title}</h2>
+                </div>
+                ${data.content}
+            `;
+            document.getElementById('modal-overlay').classList.add('show-modal');
             document.body.style.overflow = 'hidden';
         }
 
         function closeModal() {
             document.getElementById('modal-overlay').classList.remove('show-modal');
             document.body.style.overflow = 'auto';
+            // Clean up ThreeJS if exists
+            const container = document.getElementById('threejs-canvas');
+            if(container) container.innerHTML = '';
         }
 
-        // Statistics Counter
-        const startCounters = () => {
-            document.querySelectorAll('.counter').forEach(counter => {
-                const target = +counter.getAttribute('data-target');
-                const updateCount = () => {
-                    const count = +counter.innerText;
-                    const inc = target / 200;
-                    if (count < target) {
-                        counter.innerText = (count + inc).toFixed(target < 1 ? 3 : 2);
-                        setTimeout(updateCount, 10);
-                    } else counter.innerText = target.toFixed(target < 1 ? 3 : 2);
-                };
-                updateCount();
-            });
-        };
+        // --- 3D THREE.JS IMPLEMENTATION (The Beta Predictor) ---
+        let scene, camera, renderer, animationId;
 
-        // Reveal & Observer
-        window.addEventListener("scroll", () => {
-            document.querySelectorAll(".reveal").forEach(el => {
-                if (el.getBoundingClientRect().top < window.innerHeight - 150) el.classList.add("active");
+        function open3DGraph() {
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-white uppercase tracking-tight">Interactive 3D Beta Graph</h2>
+                        <p class="text-xs text-slate-400">ใช้เมาส์คลิกค้างแล้วลากเพื่อหมุนดูกราฟในมุมมอง 360 องศา</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] uppercase font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded">R² = 41.40%</span>
+                    </div>
+                </div>
+                
+                <div id="threejs-canvas" class="my-4 shadow-2xl relative">
+                    <div class="absolute bottom-4 left-4 right-4 flex justify-between gap-2 z-10 pointer-events-none">
+                        <div class="bg-white/10 backdrop-blur px-3 py-2 rounded-lg border border-white/20 text-center flex-1">
+                            <div class="text-[9px] text-slate-300 uppercase">Rank 1</div>
+                            <div class="text-xs font-bold text-white truncate">สร้างแรงบันดาลใจ</div>
+                            <div class="text-sm font-black text-accent_orange">β .209</div>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur px-3 py-2 rounded-lg border border-white/20 text-center flex-1">
+                            <div class="text-[9px] text-slate-300 uppercase">Rank 2</div>
+                            <div class="text-xs font-bold text-white truncate">สนับสนุนบุคคล</div>
+                            <div class="text-sm font-black text-accent_yellow">β .194</div>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur px-3 py-2 rounded-lg border border-white/20 text-center flex-1">
+                            <div class="text-[9px] text-slate-300 uppercase">Rank 3</div>
+                            <div class="text-xs font-bold text-white truncate">แบบอย่างอุดมการณ์</div>
+                            <div class="text-sm font-black text-slate-400">β .176</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-overlay').classList.add('show-modal');
+            document.body.style.overflow = 'hidden';
+            
+            // Allow DOM to update before initializing WebGL
+            setTimeout(initThreeJS, 100);
+        }
+
+        function initThreeJS() {
+            const container = document.getElementById('threejs-canvas');
+            if (!container) return;
+
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+            camera.position.set(0, 5, 12);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Lighting setup for premium look
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambient);
+            
+            const spotLight = new THREE.SpotLight(0xffffff, 1.5);
+            spotLight.position.set(10, 20, 10);
+            spotLight.angle = Math.PI / 4;
+            spotLight.penumbra = 0.5;
+            scene.add(spotLight);
+
+            // Floor Grid
+            const gridHelper = new THREE.GridHelper(20, 20, 0x334155, 0x0f172a);
+            gridHelper.position.y = -0.5;
+            scene.add(gridHelper);
+
+            // Beta Data Setup
+            const data = [
+                { beta: 0.209, color: 0xF97316 }, // Rank 1: Orange
+                { beta: 0.194, color: 0xFBBF24 }, // Rank 2: Yellow
+                { beta: 0.176, color: 0x94A3B8 }  // Rank 3: Gray
+            ];
+
+            const barMeshes = [];
+            
+            // Create Bars
+            data.forEach((item, index) => {
+                const geometry = new THREE.CylinderGeometry(0.8, 0.8, 1, 32); // Use cylinders for modern look
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: item.color, 
+                    metalness: 0.3, 
+                    roughness: 0.2,
+                    emissive: item.color,
+                    emissiveIntensity: 0.3
+                });
+                
+                const bar = new THREE.Mesh(geometry, material);
+                bar.position.x = (index - 1) * 3; // Space them out: -3, 0, 3
+                bar.position.y = -0.5; // Start at floor
+                bar.scale.y = 0.01; // Start flat
+                
+                scene.add(bar);
+                
+                // Target height factor (multiply beta to make it visible)
+                barMeshes.push({ mesh: bar, targetScaleY: item.beta * 25 });
             });
-        });
-        
-        const obs = new IntersectionObserver(entries => {
-            if(entries[0].isIntersecting) { startCounters(); obs.disconnect(); }
-        }, { threshold: 0.5 });
-        obs.observe(document.querySelector('.stat-card'));
-        
-        // Progress bar animate
-        setTimeout(() => {
-            document.querySelectorAll('.progress-bar').forEach(p => p.style.width = p.style.width);
-        }, 800);
+
+            // Interactive Controls Variables
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            let rotationX = 0;
+            let rotationY = 0;
+
+            // Mouse Events for Orbit
+            container.addEventListener('mousedown', (e) => { isDragging = true; });
+            container.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaMove = {
+                        x: e.offsetX - previousMousePosition.x,
+                        y: e.offsetY - previousMousePosition.y
+                    };
+                    rotationY += deltaMove.x * 0.01;
+                    rotationX += deltaMove.y * 0.01;
+                    // Clamp vertical rotation so it doesn't flip
+                    rotationX = Math.max(-Math.PI/4, Math.min(Math.PI/2, rotationX));
+                }
+                previousMousePosition = { x: e.offsetX, y: e.offsetY };
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+            
+            // Touch Events for Mobile
+            container.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }, {passive: true});
+            container.addEventListener('touchmove', (e) => {
+                if (isDragging) {
+                    const deltaMove = {
+                        x: e.touches[0].clientX - previousMousePosition.x,
+                        y: e.touches[0].clientY - previousMousePosition.y
+                    };
+                    rotationY += deltaMove.x * 0.01;
+                    rotationX += deltaMove.y * 0.01;
+                    rotationX = Math.max(-Math.PI/4, Math.min(Math.PI/2, rotationX));
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            }, {passive: true});
+            window.addEventListener('touchend', () => { isDragging = false; });
+
+            // Animation Loop
+            let time = 0;
+            function render() {
+                if(!document.getElementById('threejs-canvas')) return; // Stop if closed
+                animationId = requestAnimationFrame(render);
+                time += 0.01;
+
+                // 1. Animate Bars Growth (Spring effect)
+                barMeshes.forEach(b => {
+                    b.mesh.scale.y += (b.targetScaleY - b.mesh.scale.y) * 0.08;
+                    // Keep bottom attached to floor
+                    b.mesh.position.y = (b.mesh.scale.y / 2) - 0.5; 
+                });
+
+                // 2. Auto Rotation (if not dragging)
+                if (!isDragging) {
+                    rotationY -= 0.003; // Slow spin
+                }
+
+                // 3. Update Camera Position based on rotation
+                const radius = 12;
+                camera.position.x = radius * Math.sin(rotationY) * Math.cos(rotationX);
+                camera.position.y = radius * Math.sin(rotationX) + 5; // offset height
+                camera.position.z = radius * Math.cos(rotationY) * Math.cos(rotationX);
+                camera.lookAt(0, 2, 0);
+
+                renderer.render(scene, camera);
+            }
+            render();
+        }
+
+        // --- Number Counter Animation ---
+        function runCounters() {
+            document.querySelectorAll('.counter').forEach(counter => {
+                const target = parseFloat(counter.getAttribute('data-target'));
+                const isDecimal = target % 1 !== 0;
+                let current = 0;
+                const increment = target / 60; // 60 frames
+                
+                const update = () => {
+                    current += increment;
+                    if (current < target) {
+                        counter.innerText = isDecimal ? current.toFixed(3) : Math.round(current);
+                        requestAnimationFrame(update);
+                    } else {
+                        counter.innerText = isDecimal ? target.toFixed(3) : target;
+                    }
+                };
+                update();
+            });
+        }
+
+        // Run counters after a short delay for effect
+        setTimeout(runCounters, 800);
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const overlay = document.getElementById('modal-overlay');
+            if (event.target == overlay) {
+                closeModal();
+            }
+        }
     </script>
 </body>
 </html>
