@@ -1,25 +1,355 @@
-<!DOCTYPE HTML>
-<HTML lang="th">
- <head>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
- </head>
- <body>
-  <div id="app">
-    <h1>{{ message }}</h1>
-  </div>
-   --------------------------------                       
-  <script>
-    const { createApp } = Vue
-    createApp({
-       data() {
-         return {
-           message: 'hello world' 
-         }
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Interactive Handout: SPSS Research</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { prompt: ['Prompt', 'sans-serif'] },
+                    colors: {
+                        navy: '#0F172A',
+                        navy_light: '#1E293B',
+                        orange_main: '#F97316',
+                        yellow_main: '#FBBF24',
+                    }
+                }
+            }
         }
-    }).mount('#app') 
-  </script>
- </body>
- <footer>
+    </script>
 
- </footer>
-</HTML>
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #0F172A; color: #F8FAFC; overflow-x: hidden; }
+        
+        /* 3D Scene & Glassmorphism */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .clickable-card {
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        .clickable-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(249, 115, 22, 0.2);
+        }
+
+        .pulse-hint {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(249, 115, 22, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+        }
+
+        /* Modal Overlay */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #modal-content {
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .show-modal { display: flex !important; opacity: 1 !important; }
+        .show-modal #modal-content { transform: scale(1) !important; }
+
+        .stat-symbol { font-style: italic; font-family: 'Times New Roman', serif; }
+
+        .progress-bar { width: 0%; transition: width 2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body class="selection:bg-orange_main selection:text-white">
+
+    <!-- Modal System for Deep Information -->
+    <div id="modal-overlay" class="items-center justify-center p-4">
+        <div id="modal-content" class="glass-panel max-w-2xl w-full rounded-3xl p-8 border-t-4 border-orange_main relative shadow-2xl">
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+            <div id="modal-body">
+                <!-- Content Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Background 3D Elements -->
+    <div class="fixed top-0 left-0 w-full h-full -z-10 opacity-20 pointer-events-none">
+        <div class="absolute top-10 left-10 w-96 h-96 bg-orange_main rounded-full blur-[100px] animate-pulse"></div>
+        <div class="absolute bottom-10 right-10 w-80 h-80 bg-blue-500 rounded-full blur-[100px]"></div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="relative z-10 pt-12 pb-16 px-6 max-w-7xl mx-auto text-center md:text-left">
+        <div class="flex flex-col md:flex-row justify-between items-center md:items-end gap-8">
+            <div class="flex-1">
+                <span class="inline-block bg-orange_main/20 text-orange_main px-4 py-1 rounded-full text-xs font-bold mb-4 border border-orange_main/30">
+                    <i class="fa-solid fa-microchip mr-2"></i> 260-511 INFORMATION TECHNOLOGY
+                </span>
+                <h1 class="text-3xl md:text-5xl font-extrabold leading-tight mb-4 text-white">
+                    ภาวะผู้นำการเปลี่ยนแปลงของผู้บริหารสถานศึกษา<br>ที่ส่งผลต่อพฤติกรรมเชิงนวัตกรรมของครู
+                </h1>
+                <p class="text-slate-400 text-lg">สพป.ปัตตานี เขต 1 | คลิกที่การ์ดตัวแปรเพื่อดูนิยามศัพท์เฉพาะ</p>
+            </div>
+            
+            <div class="glass-panel p-6 rounded-3xl text-sm w-full md:w-auto min-w-[320px]">
+                <h3 class="font-bold text-yellow_main mb-4 flex items-center border-b border-white/10 pb-2">
+                    <i class="fa-solid fa-users mr-2"></i> คณะผู้จัดทำกลุ่มที่ 2
+                </h3>
+                <div class="space-y-2 text-slate-300">
+                    <div class="flex justify-between gap-4"><span>นายกฤติเดช พรหมเพชร</span> <span class="opacity-50 text-[10px]">6720121202</span></div>
+                    <div class="flex justify-between gap-4"><span>นางนูรีดา กูโน</span> <span class="opacity-50 text-[10px]">6720121212</span></div>
+                    <div class="flex justify-between gap-4"><span>นางสาวภัคสุดา บุญแนบ</span> <span class="opacity-50 text-[10px]">6620121221</span></div>
+                    <div class="flex justify-between gap-4"><span>นางสาววรารัตน์ เครือทอง</span> <span class="opacity-50 text-[10px]">6720121228</span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 relative z-10 pb-20">
+        
+        <!-- Interactive Conceptual Framework (X & Y) -->
+        <section class="reveal mb-16">
+            <div class="grid lg:grid-cols-12 gap-6 items-center">
+                <!-- INDEPENDENT VARIABLE (X) -->
+                <div class="lg:col-span-5">
+                    <div class="clickable-card glass-panel p-8 rounded-3xl border-l-8 border-orange_main pulse-hint" 
+                         onclick="openDetail('variable-x')" data-tilt data-tilt-max="5">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-orange_main font-bold tracking-widest text-xs">INDEPENDENT VARIABLE (X)</h3>
+                            <i class="fa-solid fa-magnifying-glass-plus text-orange_main/50"></i>
+                        </div>
+                        <h4 class="text-2xl font-bold mb-6 text-white">ภาวะผู้นำการเปลี่ยนแปลง</h4>
+                        <ul class="space-y-3 text-slate-400 text-sm">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-orange_main text-[10px]"></i> การเป็นแบบอย่างที่มีอุดมการณ์</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-orange_main text-[10px]"></i> การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-orange_main text-[10px]"></i> การกระตุ้นทางปัญญา</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-orange_main text-[10px]"></i> คลิกเพื่อดูรายละเอียดเพิ่มเติม...</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="lg:col-span-2 flex justify-center py-4">
+                    <div class="w-16 h-16 rounded-full bg-orange_main/20 flex items-center justify-center text-orange_main border border-orange_main/50 animate-bounce">
+                        <i class="fa-solid fa-arrow-right text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- DEPENDENT VARIABLE (Y) -->
+                <div class="lg:col-span-5">
+                    <div class="clickable-card glass-panel p-8 rounded-3xl border-l-8 border-blue-400 pulse-hint" 
+                         onclick="openDetail('variable-y')" data-tilt data-tilt-max="5">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-blue-400 font-bold tracking-widest text-xs">DEPENDENT VARIABLE (Y)</h3>
+                            <i class="fa-solid fa-magnifying-glass-plus text-blue-400/50"></i>
+                        </div>
+                        <h4 class="text-2xl font-bold mb-6 text-white">พฤติกรรมเชิงนวัตกรรมครู</h4>
+                        <ul class="space-y-3 text-slate-400 text-sm">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-lightbulb text-blue-400 text-[10px]"></i> การสำรวจโอกาสใหม่</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-lightbulb text-blue-400 text-[10px]"></i> การสร้างแนวคิดใหม่</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-lightbulb text-blue-400 text-[10px]"></i> การนำแนวคิดไปปฏิบัติ</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-lightbulb text-blue-400 text-[10px]"></i> คลิกเพื่อดูรายละเอียดเพิ่มเติม...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Statistical Section -->
+        <h2 class="text-2xl font-bold mb-8 text-white flex items-center gap-4 reveal">
+            <span class="w-12 h-1 bg-orange_main"></span> ผลการวิเคราะห์ข้อมูล SPSS
+        </h2>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <div class="stat-card glass-panel p-6 rounded-3xl reveal text-center" data-tilt>
+                <p class="text-slate-400 text-xs mb-2">ค่าเฉลี่ยภาวะผู้นำ (X)</p>
+                <div class="text-4xl font-extrabold text-white mb-2"><span class="counter" data-target="4.40">0.00</span></div>
+                <div class="text-[10px] font-bold text-orange_main uppercase">ระดับการปฏิบัติ: มาก</div>
+            </div>
+            <div class="stat-card glass-panel p-6 rounded-3xl reveal text-center" data-tilt>
+                <p class="text-slate-400 text-xs mb-2">ค่าเฉลี่ยพฤติกรรมนวัตกรรม (Y)</p>
+                <div class="text-4xl font-extrabold text-blue-400 mb-2"><span class="counter" data-target="4.41">0.00</span></div>
+                <div class="text-[10px] font-bold text-blue-400 uppercase">ระดับการปฏิบัติ: มาก</div>
+            </div>
+            <div class="stat-card glass-panel p-6 rounded-3xl reveal text-center" data-tilt>
+                <p class="text-slate-400 text-xs mb-2">ความสัมพันธ์ (<span class="stat-symbol">r</span>)</p>
+                <div class="text-4xl font-extrabold text-yellow_main mb-2"><span class="counter" data-target="0.637">0.000</span></div>
+                <div class="text-[10px] font-bold text-yellow_main uppercase">สัมพันธ์ระดับ: สูง</div>
+            </div>
+            <div class="stat-card glass-panel p-6 rounded-3xl reveal text-center" data-tilt>
+                <p class="text-slate-400 text-xs mb-2">การพยากรณ์ (<span class="stat-symbol">R</span>²)</p>
+                <div class="text-4xl font-extrabold text-green-400 mb-2"><span class="counter" data-target="0.414">0.000</span></div>
+                <div class="text-[10px] font-bold text-green-400 uppercase">พยากรณ์ได้ร้อยละ: 41.40</div>
+            </div>
+        </div>
+
+        <!-- Regression Chart Section -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-16">
+            <div class="glass-panel p-8 rounded-3xl reveal" data-tilt data-tilt-max="2">
+                <h3 class="text-xl font-bold mb-8 flex items-center justify-between">
+                    <span><i class="fa-solid fa-chart-line mr-2 text-orange_main"></i> ตัวพยากรณ์ที่ดีที่สุด (Beta)</span>
+                </h3>
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between mb-2 text-xs"><span>การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</span><span class="font-bold text-orange_main">β = .209</span></div>
+                        <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden"><div class="progress-bar h-full bg-orange_main" style="width: 85%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2 text-xs"><span>การสนับสนุนศักยภาพรายบุคคล</span><span class="font-bold text-yellow_main">β = .194</span></div>
+                        <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden"><div class="progress-bar h-full bg-yellow_main" style="width: 78%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2 text-xs"><span>การเป็นแบบอย่างที่มีอุดมการณ์</span><span class="font-bold text-slate-300">β = .176</span></div>
+                        <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden"><div class="progress-bar h-full bg-slate-400" style="width: 70%"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-8 rounded-3xl reveal flex flex-col justify-center border-l-8 border-orange_main">
+                <h3 class="text-xl font-bold mb-4 text-orange_main uppercase tracking-widest"><i class="fa-solid fa-lightbulb mr-2"></i> ข้อค้นพบสำคัญ</h3>
+                <p class="text-slate-300 text-base italic leading-relaxed">
+                    "ปัจจัยสำคัญในการส่งเสริมพฤติกรรมนวัตกรรม คือ การที่ผู้บริหารสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์ที่ชัดเจน ควบคู่กับการให้อำนาจการตัดสินใจรายบุคคล เพื่อให้ครูกล้าลงมือปฏิบัติจริงในห้องเรียน"
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center py-12 text-slate-600 text-[10px] border-t border-white/5">
+        <p>© 2025 Education Administration | PSU Pattani - Group 2 Presentation</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+    <script>
+        const detailContent = {
+            'variable-x': {
+                title: 'รายละเอียด: ภาวะผู้นำการเปลี่ยนแปลง (X)',
+                body: `
+                    <div class="grid grid-cols-1 gap-4 mt-6">
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                            <h5 class="text-orange_main font-bold text-sm mb-1">1. การเป็นแบบอย่างที่มีอุดมการณ์</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">ผู้บริหารปฏิบัติตนสอดคล้องกับสิ่งที่พูดอย่างสม่ำเสมอ แสดงออกถึงความเสียสละ และเป็นต้นแบบที่น่าเชื่อถือ</p>
+                        </div>
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                            <h5 class="text-orange_main font-bold text-sm mb-1">2. การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">การถ่ายทอดเรื่องราวสร้างแรงบันดาลใจเพื่อให้ครูเห็นเป้าหมายร่วมกัน และร่วมผลักดันวิสัยทัศน์สถานศึกษาให้เป็นจริง</p>
+                        </div>
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                            <h5 class="text-orange_main font-bold text-sm mb-1">3. การกระตุ้นทางปัญญา</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">ส่งเสริมให้ครูตั้งคำถาม ท้าทายวิธีปฏิบัติงานเดิม และสนับสนุนการทดลองใช้นวัตกรรมหรือวิธีการสอนใหม่ๆ</p>
+                        </div>
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                            <h5 class="text-orange_main font-bold text-sm mb-1">4. การสนับสนุนศักยภาพรายบุคคล</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">จดจำความเชี่ยวชาญพิเศษของครูแต่ละคน ให้คำปรึกษา และมอบอำนาจตัดสินใจให้ครูรับผิดชอบโครงการสำคัญ</p>
+                        </div>
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                            <h5 class="text-orange_main font-bold text-sm mb-1">5. การเสริมแรงเพื่อรักษาพฤติกรรม</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">การยกย่องชมเชยเมื่อมีผลงานที่ดี และจัดกิจกรรมเฉลิมฉลองความสำเร็จร่วมกันเพื่อสร้างความภาคภูมิใจในทีม</p>
+                        </div>
+                    </div>
+                `
+            },
+            'variable-y': {
+                title: 'รายละเอียด: พฤติกรรมเชิงนวัตกรรมครู (Y)',
+                body: `
+                    <div class="grid grid-cols-1 gap-4 mt-6">
+                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                            <h5 class="text-blue-400 font-bold text-sm mb-1">1. การสำรวจโอกาสใหม่</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">การวิเคราะห์ปัญหาการเรียนรู้ของนักเรียน หรือปัญหาในชั้นเรียนเพื่อหาต้นตอและแนวทางการแก้ไขใหม่ๆ</p>
+                        </div>
+                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                            <h5 class="text-blue-400 font-bold text-sm mb-1">2. การสร้างแนวคิดใหม่</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">การคิดค้น พัฒนาสื่อการสอน หรือกิจกรรมการเรียนรู้ใหม่ๆ ที่ชัดเจนเพื่อแก้ปัญหาและยกระดับคุณภาพผู้เรียน</p>
+                        </div>
+                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                            <h5 class="text-blue-400 font-bold text-sm mb-1">3. การทำให้แนวคิดเป็นที่ยอมรับ</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">การปรึกษาหารือกับผู้บริหารและเพื่อนครู เพื่อขอการสนับสนุนด้านทรัพยากรและสร้างแนวร่วมในการใช้นวัตกรรม</p>
+                        </div>
+                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                            <h5 class="text-blue-400 font-bold text-sm mb-1">4. การนำแนวคิดไปปฏิบัติ</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">การนำนวัตกรรมมาบูรณาการในแผนการสอนจริง และประเมินผลจากการเก็บข้อมูลนักเรียนเพื่อนำมาสะท้อนผล</p>
+                        </div>
+                        <div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                            <h5 class="text-blue-400 font-bold text-sm mb-1">5. การสะท้อนคิดเพื่อความยั่งยืน</h5>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">การทบทวนผลร่วมกับเพื่อนครู และพัฒนาต่อยอดนวัตกรรมที่สำเร็จให้กลายเป็นแนวปฏิบัติที่ดี (Best Practice)</p>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        function openDetail(key) {
+            const modal = document.getElementById('modal-overlay');
+            const body = document.getElementById('modal-body');
+            const data = detailContent[key];
+            
+            body.innerHTML = `<h2 class="text-2xl font-black text-white">${data.title}</h2>${data.body}`;
+            modal.classList.add('show-modal');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('show-modal');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Statistics Counter
+        const startCounters = () => {
+            document.querySelectorAll('.counter').forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const updateCount = () => {
+                    const count = +counter.innerText;
+                    const inc = target / 200;
+                    if (count < target) {
+                        counter.innerText = (count + inc).toFixed(target < 1 ? 3 : 2);
+                        setTimeout(updateCount, 10);
+                    } else counter.innerText = target.toFixed(target < 1 ? 3 : 2);
+                };
+                updateCount();
+            });
+        };
+
+        // Reveal & Observer
+        window.addEventListener("scroll", () => {
+            document.querySelectorAll(".reveal").forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 150) el.classList.add("active");
+            });
+        });
+        
+        const obs = new IntersectionObserver(entries => {
+            if(entries[0].isIntersecting) { startCounters(); obs.disconnect(); }
+        }, { threshold: 0.5 });
+        obs.observe(document.querySelector('.stat-card'));
+        
+        // Progress bar animate
+        setTimeout(() => {
+            document.querySelectorAll('.progress-bar').forEach(p => p.style.width = p.style.width);
+        }, 800);
+    </script>
+</body>
+</html>
