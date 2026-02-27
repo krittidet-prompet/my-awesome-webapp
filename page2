@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fully Interactive 3D Handout: ภาวะผู้นำการเปลี่ยนแปลง</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { prompt: ['Prompt', 'sans-serif'] },
+                    colors: {
+                        navy: '#0F172A',
+                        navy_light: '#1E3A8A',
+                        sky_bg: '#E0F2FE',
+                        sky_card: '#F0F9FF',
+                        accent_orange: '#F97316',
+                        accent_yellow: '#EAB308',
+                        text_gray: '#475569'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+            min-height: 100vh;
+            padding: 1.5rem;
+            color: #0F172A;
+        }
+
+        /* 3D Interactive Card Styles */
+        .interactive-zone {
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        
+        .interactive-zone::after {
+            content: '\f0a6'; /* Hand pointer icon */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            opacity: 0;
+            color: rgba(56, 189, 248, 0.8);
+            transition: opacity 0.3s;
+            font-size: 1.2rem;
+            animation: bounce-small 1s infinite;
+        }
+
+        .interactive-zone:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 30px -10px rgba(56, 189, 248, 0.4);
+            border-color: #38BDF8;
+        }
+
+        .interactive-zone:hover::after {
+            opacity: 1;
+        }
+
+        /* 3D Icon Container */
+        .icon-3d {
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            box-shadow: 4px 4px 10px #d1d1d1, -4px -4px 10px #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Number Gradient */
+        .text-gradient {
+            background: linear-gradient(to right, #F97316, #EAB308);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(249, 115, 22, 0.2);
+        }
+
+        /* Modal Styles */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        #modal-content {
+            background: white;
+            border-radius: 2rem;
+            max-width: 600px;
+            width: 100%;
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .show-modal { display: flex !important; opacity: 1 !important; }
+        .show-modal #modal-content { transform: scale(1) !important; }
+
+        @keyframes bounce-small {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .stat-symbol { font-style: italic; font-family: 'Times New Roman', Times, serif; }
+    </style>
+</head>
+<body class="flex justify-center items-center">
+
+    <div id="modal-overlay" onclick="closeModal(event)">
+        <div id="modal-content" onclick="event.stopPropagation()">
+            <div class="bg-gradient-to-r from-navy to-navy_light p-6 text-white relative">
+                <button onclick="closeModal(event)" class="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+                <div class="flex items-center gap-4">
+                    <div id="modal-icon" class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl"></div>
+                    <h2 id="modal-title" class="text-xl font-bold">หัวข้อ</h2>
+                </div>
+            </div>
+            <div id="modal-body" class="p-6 text-text_gray space-y-4 max-h-[60vh] overflow-y-auto">
+                </div>
+        </div>
+    </div>
+
+    <div class="max-w-[800px] w-full bg-sky_bg/80 backdrop-blur-md rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white relative">
+        
+        <div class="interactive-zone bg-gradient-to-r from-navy to-navy_light text-white p-8 relative overflow-hidden" onclick="openDetail('header')">
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-xl"></div>
+            
+            <div class="relative z-10 flex flex-col md:flex-row justify-between items-start gap-6">
+                <div class="flex-1">
+                    <span class="inline-block bg-white/20 backdrop-blur border border-white/30 px-3 py-1 rounded-full text-xs font-semibold mb-4 text-sky-200">
+                        รายวิชา 260-511 เทคโนโลยีสารสนเทศเพื่อการบริหารฯ
+                    </span>
+                    <h1 class="text-2xl md:text-3xl font-extrabold leading-tight mb-2 text-white drop-shadow-lg">
+                        ภาวะผู้นำการเปลี่ยนแปลงของผู้บริหารสถานศึกษา<br>
+                        <span class="text-accent_yellow">ที่ส่งผลต่อพฤติกรรมเชิงนวัตกรรมในการทำงานของครู</span>
+                    </h1>
+                    <p class="text-sky-200 text-sm">สังกัดสำนักงานเขตพื้นที่การศึกษาประถมศึกษาปัตตานี เขต 1</p>
+                </div>
+                
+                <div class="bg-navy_light/50 border border-white/20 p-4 rounded-xl text-[11px] text-sky-100 min-w-[220px] shadow-lg">
+                    <p class="font-bold text-white mb-2 border-b border-white/20 pb-1">กลุ่มที่ 2 | เสนอ รศ.ดร.ธีร หฤทัยธนาสันติ์</p>
+                    <ul class="space-y-1">
+                        <li>นายกฤติเดช พรหมเพชร</li>
+                        <li>นางนูรีดา กูโน</li>
+                        <li>นางสาวภัคสุดา บุญแนบ</li>
+                        <li>นางสาววรารัตน์ เครือทอง</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 md:p-8 space-y-8">
+            <div class="relative">
+                <div class="grid md:grid-cols-2 gap-8 relative z-10">
+                    <div class="interactive-zone bg-white rounded-2xl p-6 border-2 border-transparent shadow-lg" onclick="openDetail('var-x')">
+                        <div class="flex items-center gap-4 mb-4 border-b-2 border-sky-100 pb-3">
+                            <div class="w-12 h-12 icon-3d text-navy_light text-xl"><i class="fa-solid fa-cogs"></i></div>
+                            <div>
+                                <h3 class="font-bold text-navy text-lg leading-tight">ตัวแปรอิสระ (X)</h3>
+                                <p class="text-[10px] text-text_gray bg-sky-100 px-2 py-0.5 rounded-full inline-block mt-1">คลิกดูนิยามศัพท์</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm text-text_gray font-medium">
+                            <li><i class="fa-solid fa-circle-check text-sky-400 mr-2 text-[10px]"></i> 1. แบบอย่างที่มีอุดมการณ์</li>
+                            <li><i class="fa-solid fa-circle-check text-sky-400 mr-2 text-[10px]"></i> 2. สร้างแรงบันดาลใจ</li>
+                            <li><i class="fa-solid fa-circle-check text-sky-400 mr-2 text-[10px]"></i> 3. กระตุ้นทางปัญญา</li>
+                            <li><i class="fa-solid fa-circle-check text-sky-400 mr-2 text-[10px]"></i> 4. สนับสนุนศักยภาพรายบุคคล</li>
+                            <li><i class="fa-solid fa-circle-check text-sky-400 mr-2 text-[10px]"></i> 5. เสริมแรงพฤติกรรม</li>
+                        </ul>
+                    </div>
+
+                    <div class="interactive-zone bg-white rounded-2xl p-6 border-2 border-transparent shadow-lg" onclick="openDetail('var-y')">
+                        <div class="flex items-center gap-4 mb-4 border-b-2 border-sky-100 pb-3">
+                            <div class="w-12 h-12 icon-3d text-accent_yellow text-xl"><i class="fa-solid fa-lightbulb"></i></div>
+                            <div>
+                                <h3 class="font-bold text-navy text-lg leading-tight">ตัวแปรตาม (Y)</h3>
+                                <p class="text-[10px] text-text_gray bg-yellow-100 px-2 py-0.5 rounded-full inline-block mt-1">คลิกดูกระบวนการ</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm text-text_gray font-medium">
+                            <li><i class="fa-solid fa-lightbulb text-accent_yellow mr-2 text-[10px]"></i> 1. สำรวจโอกาสใหม่</li>
+                            <li><i class="fa-solid fa-lightbulb text-accent_yellow mr-2 text-[10px]"></i> 2. สร้างแนวคิดใหม่</li>
+                            <li><i class="fa-solid fa-lightbulb text-accent_yellow mr-2 text-[10px]"></i> 3. ทำให้แนวคิดเป็นที่ยอมรับ</li>
+                            <li><i class="fa-solid fa-lightbulb text-accent_yellow mr-2 text-[10px]"></i> 4. นำแนวคิดไปปฏิบัติ</li>
+                            <li><i class="fa-solid fa-lightbulb text-accent_yellow mr-2 text-[10px]"></i> 5. สะท้อนคิดเพื่อความยั่งยืน</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                    <div class="bg-white p-3 rounded-full shadow-lg border-2 border-sky-100 text-sky-400 text-xl">
+                        <i class="fa-solid fa-arrow-right-long"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="interactive-zone bg-white rounded-2xl p-6 flex items-center gap-6 border-2 border-transparent shadow-md" onclick="openDetail('stat-mean')">
+                    <div class="w-16 h-16 icon-3d text-3xl text-sky-500 flex-shrink-0"><i class="fa-solid fa-gauge-high"></i></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-text_gray uppercase bg-sky-50 px-2 py-1 rounded inline-block mb-2">สถิติพื้นฐาน (คลิกดูคำแปล)</p>
+                        <div class="flex gap-4">
+                            <div>
+                                <span class="text-xs text-text_gray">ผู้นำฯ</span><br>
+                                <span class="text-2xl font-black text-gradient"><span class="stat-symbol">x̄</span> 4.40</span>
+                            </div>
+                            <div class="w-px bg-sky-200"></div>
+                            <div>
+                                <span class="text-xs text-text_gray">นวัตกรรม</span><br>
+                                <span class="text-2xl font-black text-gradient"><span class="stat-symbol">x̄</span> 4.41</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="interactive-zone bg-white rounded-2xl p-6 flex items-center gap-6 border-2 border-transparent shadow-md" onclick="openDetail('stat-diff')">
+                    <div class="w-16 h-16 icon-3d text-3xl text-sky-500 flex-shrink-0"><i class="fa-solid fa-chart-column"></i></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-text_gray uppercase bg-sky-50 px-2 py-1 rounded inline-block mb-2">เปรียบเทียบความแตกต่าง (คลิก)</p>
+                        <div class="text-[11px] text-navy space-y-1 font-medium">
+                            <p><i class="fa-solid fa-mars text-blue-500 w-3"></i> <strong>เพศ:</strong> <span class="text-sky-600">ชาย > หญิง</span> (แรงบันดาลใจ)</p>
+                            <p><i class="fa-solid fa-school text-orange-500 w-3"></i> <strong>ขนาด รร.:</strong> <span class="text-accent_orange">เล็ก > กลาง</span> (นวัตกรรม)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="interactive-zone bg-white rounded-2xl p-6 flex items-center gap-6 border-2 border-transparent shadow-md" onclick="openDetail('stat-corr')">
+                    <div class="w-16 h-16 icon-3d text-3xl text-sky-500 flex-shrink-0"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-text_gray uppercase bg-sky-50 px-2 py-1 rounded inline-block mb-1">ความสัมพันธ์ระดับสูง (คลิก)</p><br>
+                        <span class="text-3xl font-black text-gradient"><span class="stat-symbol">r</span> = .637</span>
+                        <span class="text-[10px] text-red-500 font-bold ml-2">(Sig < .01)</span>
+                    </div>
+                </div>
+
+                <div class="interactive-zone border-2 border-accent_yellow bg-[#FFFBEB] rounded-2xl p-6 relative overflow-hidden shadow-lg" onclick="openDetail('stat-reg')">
+                    <div class="absolute right-[-10px] bottom-[-10px] opacity-10 text-8xl text-accent_yellow"><i class="fa-solid fa-chart-pie"></i></div>
+                    <div class="relative z-10 flex flex-col justify-center h-full">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[10px] font-bold text-text_gray uppercase bg-yellow-100 px-2 py-1 rounded">การพยากรณ์ (คลิกวิเคราะห์)</p>
+                            <span class="bg-accent_yellow text-white text-[10px] px-2 py-0.5 rounded font-bold"><span class="stat-symbol">R²</span> = .414</span>
+                        </div>
+                        <p class="text-4xl font-black text-gradient mb-2 mt-1">41.40%</p>
+                        <p class="text-[11px] font-bold text-navy mb-1 border-b border-yellow-200 pb-1"><i class="fa-solid fa-trophy text-accent_yellow"></i> Top 3 ตัวพยากรณ์ที่ดีที่สุด:</p>
+                        <ul class="text-[11px] text-text_gray space-y-1 mt-1 font-medium">
+                            <li class="flex justify-between"><span>1. สร้างแรงบันดาลใจ</span> <strong class="text-accent_orange"><span class="stat-symbol">β</span> = .209</strong></li>
+                            <li class="flex justify-between"><span>2. สนับสนุนรายบุคคล</span> <strong class="text-accent_yellow"><span class="stat-symbol">β</span> = .194</strong></li>
+                            <li class="flex justify-between"><span>3. แบบอย่างอุดมการณ์</span> <strong class="text-sky-600"><span class="stat-symbol">β</span> = .176</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="interactive-zone bg-gradient-to-r from-accent_orange to-accent_yellow p-6 text-white m-6 mt-0 rounded-2xl shadow-lg relative overflow-hidden" onclick="openDetail('conclusion')">
+            <i class="fa-solid fa-bullseye absolute right-4 top-1/2 transform -translate-y-1/2 text-7xl text-white/20"></i>
+            
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-3xl flex-shrink-0 backdrop-blur-sm border border-white/30">
+                    <i class="fa-solid fa-lightbulb animate-pulse"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <h3 class="font-bold text-lg drop-shadow-md">ข้อค้นพบสำคัญ (Key Takeaway)</h3>
+                        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">คลิกอ่านบทสรุป</span>
+                    </div>
+                    <p class="text-sm font-medium leading-relaxed opacity-95">
+                        "ปัจจัยที่จะกระตุ้นให้นวัตกรรมเกิดในโรงเรียน คือ ผู้บริหารต้อง <strong>'สร้างแรงบันดาลใจและมีวิสัยทัศน์'</strong> ควบคู่กับการ <strong>'สนับสนุนศักยภาพครูเป็นรายบุคคล'</strong>..."
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const infoData = {
+            'header': {
+                icon: 'fa-info-circle',
+                title: 'ข้อมูลบริบทงานวิจัย',
+                content: `
+                    <p class="font-bold text-navy mb-2">วัตถุประสงค์การวิจัย:</p>
+                    <ul class="list-disc pl-5 space-y-1 text-sm mb-4">
+                        <li>เพื่อศึกษาระดับภาวะผู้นำการเปลี่ยนแปลงและพฤติกรรมเชิงนวัตกรรม</li>
+                        <li>เพื่อเปรียบเทียบความแตกต่างจำแนกตาม เพศ และ ขนาดโรงเรียน</li>
+                        <li>เพื่อศึกษาความสัมพันธ์ และหาตัวแปรพยากรณ์ที่ดีที่สุด</li>
+                    </ul>
+                    <div class="bg-sky-50 p-4 rounded-xl border border-sky-100 text-sm">
+                        <i class="fa-solid fa-location-dot text-sky-500 mr-2"></i> <strong>กลุ่มตัวอย่าง:</strong> ข้าราชการครูสังกัด สพป.ปัตตานี เขต 1
+                    </div>
+                `
+            },
+            'var-x': {
+                icon: 'fa-cogs',
+                title: 'เจาะลึก: ภาวะผู้นำการเปลี่ยนแปลง (X)',
+                content: `
+                    <p class="text-sm mb-4">แนวคิดของ Bass & Avolio ที่เชื่อว่าผู้นำต้องกระตุ้นให้ผู้ตามทำได้เกินกว่าความคาดหมาย ประกอบด้วย 5 มิติ (5I's):</p>
+                    <div class="space-y-3 text-sm">
+                        <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-sky-400"><strong>1. แบบอย่างที่มีอุดมการณ์:</strong> ผู้บริหารต้องเป็น Role Model ที่น่าเชื่อถือและเสียสละ</div>
+                        <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-accent_orange"><strong>2. สร้างแรงบันดาลใจ:</strong> กำหนดวิสัยทัศน์และสื่อสารให้ครูมีเป้าหมายร่วมกัน</div>
+                        <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-sky-400"><strong>3. กระตุ้นทางปัญญา:</strong> ท้าทายให้ครูคิดนอกกรอบและแก้ปัญหาด้วยวิธีใหม่ๆ</div>
+                        <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-accent_yellow"><strong>4. สนับสนุนศักยภาพรายบุคคล:</strong> ทำหน้าที่เป็นโค้ช ให้คำปรึกษาตามความถนัดของครูแต่ละคน</div>
+                        <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-sky-400"><strong>5. เสริมแรงพฤติกรรม:</strong> การยกย่องและให้รางวัลเมื่อครูทำผลงานได้ดี</div>
+                    </div>
+                `
+            },
+            'var-y': {
+                icon: 'fa-lightbulb',
+                title: 'เจาะลึก: พฤติกรรมเชิงนวัตกรรม (Y)',
+                content: `
+                    <p class="text-sm mb-4">ไม่ใช่แค่การคิด แต่คือกระบวนการลงมือทำเพื่อแก้ปัญหาในห้องเรียน มี 5 ขั้นตอน:</p>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-accent_yellow text-white flex items-center justify-center font-bold text-xs">1</span> <strong>สำรวจโอกาส:</strong> มองเห็นปัญหาการเรียนรู้ของนักเรียน</div>
+                        <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-accent_yellow text-white flex items-center justify-center font-bold text-xs">2</span> <strong>สร้างแนวคิด:</strong> คิดค้นสื่อหรือเทคนิคการสอนใหม่ๆ</div>
+                        <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-accent_yellow text-white flex items-center justify-center font-bold text-xs">3</span> <strong>ทำให้ยอมรับ:</strong> นำเสนอไอเดียให้ผู้บริหารและเพื่อนครูสนับสนุน</div>
+                        <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-accent_yellow text-white flex items-center justify-center font-bold text-xs">4</span> <strong>นำไปปฏิบัติ:</strong> ใช้สอนจริงในห้องเรียนและวัดผล</div>
+                        <div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-accent_yellow text-white flex items-center justify-center font-bold text-xs">5</span> <strong>สะท้อนคิด:</strong> ปรับปรุงและพัฒนาเป็น Best Practice</div>
+                    </div>
+                `
+            },
+            'stat-mean': {
+                icon: 'fa-gauge-high',
+                title: 'แปลผล: สถิติพื้นฐาน',
+                content: `
+                    <div class="flex justify-center gap-8 mb-6 mt-4">
+                        <div class="text-center"><span class="text-4xl font-black text-sky-500">4.40</span><br><span class="text-xs font-bold">ผู้นำการเปลี่ยนแปลง</span></div>
+                        <div class="text-center"><span class="text-4xl font-black text-accent_yellow">4.41</span><br><span class="text-xs font-bold">พฤติกรรมนวัตกรรม</span></div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl text-sm border border-blue-100">
+                        <strong>การแปลความหมาย:</strong> คะแนนเฉลี่ยทั้งสองตัวแปรอยู่ในระดับ <strong>"มาก"</strong> แสดงให้เห็นว่าในภาพรวม สพป.ปัตตานี เขต 1 ผู้บริหารมีภาวะผู้นำที่ดี และครูก็มีความตื่นตัวในการสร้างนวัตกรรมอยู่แล้ว ถือเป็นต้นทุนที่ดีในการต่อยอด
+                    </div>
+                `
+            },
+            'stat-diff': {
+                icon: 'fa-chart-column',
+                title: 'แปลผล: การเปรียบเทียบ (t-test / ANOVA)',
+                content: `
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-xl border-l-4 border-blue-500">
+                            <h4 class="font-bold text-navy mb-1"><i class="fa-solid fa-mars"></i> มิติด้านเพศ (t-test)</h4>
+                            <p class="text-sm">ภาพรวมไม่ต่างกัน <strong>แต่</strong> ผู้บริหารชาย มีคะแนนด้าน "การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์" สูงกว่าเพศหญิง (Sig < .05) อาจสะท้อนถึงรูปแบบการสื่อสารเชิงรุกที่เป็นลักษณะเด่นในบริบทพื้นที่</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-xl border-l-4 border-orange-500">
+                            <h4 class="font-bold text-navy mb-1"><i class="fa-solid fa-school"></i> มิติขนาดโรงเรียน (ANOVA)</h4>
+                            <p class="text-sm">ครูในโรงเรียน <strong>ขนาดเล็ก</strong> มีพฤติกรรมเชิงนวัตกรรมภาพรวมสูงกว่า โรงเรียนขนาดกลาง (Sig < .05) เนื่องจากความคล่องตัว (Agility) การประสานงานที่ใกล้ชิด และภาระงานที่ต้องแก้ปัญหาด้วยข้อจำกัดด้านทรัพยากร</p>
+                        </div>
+                    </div>
+                `
+            },
+            'stat-corr': {
+                icon: 'fa-arrow-trend-up',
+                title: 'แปลผล: การวิเคราะห์ความสัมพันธ์',
+                content: `
+                    <div class="text-center mb-6 mt-4">
+                        <span class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent_orange to-accent_yellow">r = .637</span>
+                        <p class="text-sm text-red-500 font-bold mt-1">มีนัยสำคัญทางสถิติที่ระดับ .01</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-xl text-sm border border-yellow-100">
+                        <strong>การแปลความหมาย (Pearson Correlation):</strong> 
+                        มีความสัมพันธ์ทางบวกในระดับ <strong>"สูง"</strong> หมายความว่า ทิศทางของสองตัวแปรไปทางเดียวกันอย่างชัดเจน 
+                        <br><br><em>"ยิ่งผู้บริหารแสดงภาวะผู้นำการเปลี่ยนแปลงมากเท่าไหร่ ครูในโรงเรียนก็จะยิ่งแสดงพฤติกรรมในการสร้างสรรค์นวัตกรรมมากขึ้นเท่านั้น"</em>
+                    </div>
+                `
+            },
+            'stat-reg': {
+                icon: 'fa-chart-pie',
+                title: 'แปลผล: การวิเคราะห์การถดถอยพหุคูณ',
+                content: `
+                    <div class="bg-orange-50 p-4 rounded-xl mb-4 border border-orange-100">
+                        <h4 class="font-bold text-accent_orange text-lg">R² = .414 (อธิบายได้ 41.40%)</h4>
+                        <p class="text-sm">ตัวแปรภาวะผู้นำทั้ง 5 ด้าน สามารถพยากรณ์และอธิบายการเกิดนวัตกรรมของครูได้ 41.40% (ส่วนอีก 58.60% เกิดจากปัจจัยอื่นที่เราไม่ได้ศึกษา เช่น งบประมาณ สภาพแวดล้อม)</p>
+                    </div>
+                    <p class="font-bold text-navy mb-2">3 ปัจจัยที่ส่งผล (พยากรณ์) ได้ดีที่สุด (ดูค่า Beta):</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between items-center bg-white border p-2 rounded"><span>1. การสร้างแรงบันดาลใจ</span> <span class="font-bold text-accent_orange">β = .209</span></div>
+                        <div class="flex justify-between items-center bg-white border p-2 rounded"><span>2. สนับสนุนศักยภาพรายบุคคล</span> <span class="font-bold text-accent_yellow">β = .194</span></div>
+                        <div class="flex justify-between items-center bg-white border p-2 rounded"><span>3. แบบอย่างที่มีอุดมการณ์</span> <span class="font-bold text-sky-500">β = .176</span></div>
+                    </div>
+                `
+            },
+            'conclusion': {
+                icon: 'fa-bullseye',
+                title: 'บทสรุปและข้อเสนอแนะสู่วิชาชีพ',
+                content: `
+                    <div class="text-center mb-4">
+                        <i class="fa-solid fa-rocket text-4xl text-accent_orange mb-2"></i>
+                        <h3 class="font-bold text-lg">The "What's Next"</h3>
+                    </div>
+                    <p class="text-sm leading-relaxed mb-4">
+                        จากผลสถิติทั้งหมด (โดยเฉพาะ Regression) สรุปได้ว่า <strong>หากเขตพื้นที่การศึกษาต้องการยกระดับให้ครูสร้างนวัตกรรม ไม่จำเป็นต้องบังคับอบรมทุกเรื่อง</strong> แต่ควรเน้นพัฒนาผู้บริหารใน 2 ทักษะหลัก:
+                    </p>
+                    <ul class="space-y-3 text-sm">
+                        <li class="bg-gray-50 p-3 rounded-lg border-l-4 border-accent_orange">
+                            <strong>1. ทักษะการสร้างแรงบันดาลใจ (Visioning & Inspiring):</strong> ผู้นำต้องวาดภาพอนาคตให้ครูเห็นว่านวัตกรรมจะช่วยลดภาระครูและช่วยเด็กได้อย่างไร
+                        </li>
+                        <li class="bg-gray-50 p-3 rounded-lg border-l-4 border-accent_yellow">
+                            <strong>2. ทักษะการโค้ชรายบุคคล (Individualized Coaching):</strong> ผู้บริหารต้องเลิกตัดเสื้อโหล แต่ให้การสนับสนุนงบประมาณและเวลาตามความเชี่ยวชาญของครูแต่ละคน
+                        </li>
+                    </ul>
+                `
+            }
+        };
+
+        // UI Logic
+        function openDetail(key) {
+            const data = infoData[key];
+            if (!data) return;
+
+            document.getElementById('modal-icon').className = `w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl fa-solid ${data.icon}`;
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-body').innerHTML = data.content;
+
+            document.getElementById('modal-overlay').classList.add('show-modal');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(e) {
+            if (e && e.target.id !== 'modal-overlay' && !e.target.closest('button')) return;
+            document.getElementById('modal-overlay').classList.remove('show-modal');
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+</html>
