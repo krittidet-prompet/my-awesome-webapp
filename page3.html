@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ภาวะผู้นำและนวัตกรรม | Research Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        prompt: ['Prompt', 'sans-serif']
+                    },
+                    colors: {
+                        dark_bg: '#000000',
+                        dark_card: '#1d1d1f',
+                        dark_card_hover: '#2d2d2f',
+                        text_gray: '#86868b',
+                        text_light: '#f5f5f7',
+                        accent_blue: '#2997ff',
+                        accent_orange: '#ff7a18',
+                        accent_gray: '#86868b',
+                        accent_teal: '#2dd4bf'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            background-color: #000000; 
+            color: #f5f5f7; 
+            font-family: 'Prompt', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .tracking-tight-custom { letter-spacing: -0.015em; }
+        
+        /* Gradient Text */
+        .text-gradient-primary {
+            background: linear-gradient(90deg, #ff7a18, #af002d 50%, #319197);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-gradient-secondary {
+            background: linear-gradient(135deg, #2997ff, #319197);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Bento Box Cards */
+        .bento-card {
+            background-color: #1d1d1f;
+            border-radius: 2rem;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.4s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .bento-card:hover { transform: scale(1.02); background-color: #2d2d2f; }
+        .bento-card::after {
+            content: ''; position: absolute; inset: 0; border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05); pointer-events: none;
+        }
+
+        /* Modal System */
+        #modal-overlay { 
+            display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            z-index: 1000; align-items: center; justify-content: center; 
+            opacity: 0; transition: opacity 0.4s ease; padding: 1rem; 
+        }
+        #modal-content { 
+            background: rgba(29, 29, 31, 0.95); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 2rem; max-width: 700px; width: 100%; max-height: 85vh; 
+            display: flex; flex-direction: column; transform: translateY(40px) scale(0.95); 
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+        }
+        .show-modal { display: flex !important; opacity: 1 !important; }
+        .show-modal #modal-content { transform: translateY(0) scale(1) !important; }
+
+        #modal-body::-webkit-scrollbar { width: 6px; }
+        #modal-body::-webkit-scrollbar-track { background: transparent; }
+        #modal-body::-webkit-scrollbar-thumb { background: #424245; border-radius: 10px; }
+
+        /* Animations */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        
+        .stat-symbol { font-style: italic; font-family: 'Times New Roman', serif; }
+    </style>
+</head>
+<body>
+
+    <nav class="fixed top-0 w-full bg-[#1d1d1f]/80 backdrop-blur-md z-50 border-b border-white/5 h-12 flex items-center px-4 sm:px-8">
+        <div class="max-w-7xl mx-auto w-full flex justify-between items-center text-[10px] sm:text-xs text-text_light font-medium">
+            <span><i class="fa-solid fa-graduation-cap mr-2"></i> PSU PATTANI</span>
+            <span class="hidden sm:inline">260-511 เทคโนโลยีสารสนเทศเพื่อการบริหารและการวิจัยทางการศึกษา</span>
+            <span class="text-accent_orange font-bold">กลุ่มที่ 1</span>
+        </div>
+    </nav>
+
+    <div id="modal-overlay" onclick="closeModal(event)">
+        <div id="modal-content" onclick="event.stopPropagation()">
+            <div class="p-6 sm:p-8 pb-4 relative flex-shrink-0">
+                <button onclick="closeModal(event)" class="absolute top-6 right-6 w-8 h-8 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition z-50">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+                <div class="flex items-center gap-4 mb-2 pr-8">
+                    <div id="modal-icon" class="w-12 h-12 rounded-full flex items-center justify-center text-xl bg-white/10 text-white shrink-0"></div>
+                    <h2 id="modal-title" class="text-xl sm:text-2xl font-semibold tracking-tight-custom text-white leading-tight">Title</h2>
+                </div>
+            </div>
+            <div id="modal-body" class="p-6 sm:p-8 pt-0 text-text_gray text-sm sm:text-base space-y-4 overflow-y-auto font-light"></div>
+        </div>
+    </div>
+
+    <main class="pt-20 pb-24 px-4 sm:px-6 lg:px-8 max-w-[1100px] mx-auto space-y-4 sm:space-y-6">
+        
+        <section class="text-center pt-10 pb-8 sm:pt-16 sm:pb-12 reveal relative">
+            <h2 class="text-xs sm:text-sm text-text_gray font-medium tracking-widest mb-4 uppercase">Research Insights Dashboard</h2>
+            <h1 class="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight-custom leading-[1.2] mb-6">
+                ภาวะผู้นำการเปลี่ยนแปลง. <br>
+                <span class="text-gradient-primary">สู่นวัตกรรมแห่งอนาคต.</span>
+            </h1>
+            <p class="text-sm sm:text-lg text-text_gray max-w-3xl mx-auto font-light mb-8 leading-relaxed">
+                การศึกษาความสัมพันธ์และตัวพยากรณ์ภาวะผู้นำการเปลี่ยนแปลงของผู้บริหารสถานศึกษา<br>
+                ที่ส่งผลต่อพฤติกรรมเชิงนวัตกรรมในการทำงานของครู สังกัดสำนักงานเขตพื้นที่การศึกษาประถมศึกษาปัตตานี เขต 1
+            </p>
+            
+            <div class="bg-[#1d1d1f] p-5 sm:p-6 rounded-2xl border border-white/10 text-left max-w-4xl mx-auto flex flex-col md:flex-row justify-between gap-6">
+                <div>
+                    <p class="text-xs font-semibold text-accent_orange uppercase tracking-widest mb-2">คณะผู้จัดทำ (กลุ่มที่ 1)</p>
+                    <ul class="text-sm text-text_light space-y-1">
+                        <li>1. นายกฤติเดช พรหมเพชร <span class="text-text_gray text-xs ml-2">6720121202</span></li>
+                        <li>2. นางนูรีดา กูโน <span class="text-text_gray text-xs ml-2">6720121212</span></li>
+                        <li>3. นางสาวภัคสุดา บุญแนบ <span class="text-text_gray text-xs ml-2">6620121221</span></li>
+                        <li>4. นางสาววรารัตน์ เครือทอง <span class="text-text_gray text-xs ml-2">6720121228</span></li>
+                    </ul>
+                </div>
+                <div class="md:text-right border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
+                    <p class="text-xs font-semibold text-accent_blue uppercase tracking-widest mb-2">เสนอ</p>
+                    <p class="text-sm text-text_light font-medium">รองศาสตราจารย์ ดร.ธีร หฤทัยธนาสันติ์</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
+            
+            <div class="bento-card col-span-1 md:col-span-6 p-8 sm:p-10 reveal" onclick="openDetail('var-x')">
+                <p class="text-xs font-semibold text-text_gray uppercase tracking-widest mb-2">ตัวแปรอิสระ (X)</p>
+                <h3 class="text-2xl sm:text-3xl font-semibold tracking-tight-custom mb-6 text-white leading-tight">ภาวะผู้นำการเปลี่ยนแปลง<br><span class="text-lg text-text_gray font-normal">ของผู้บริหารสถานศึกษา</span></h3>
+                <ul class="space-y-3 text-sm sm:text-base text-text_gray">
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-check text-accent_blue mt-1 text-[10px] shrink-0"></i> <span>(X1) การเป็นแบบอย่างที่มีอุดมการณ์</span></li>
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-check text-accent_blue mt-1 text-[10px] shrink-0"></i> <span>(X2) การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</span></li>
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-check text-accent_blue mt-1 text-[10px] shrink-0"></i> <span>(X3) การกระตุ้นทางปัญญา</span></li>
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-check text-accent_blue mt-1 text-[10px] shrink-0"></i> <span>(X4) การสนับสนุนศักยภาพรายบุคคล</span></li>
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-check text-accent_blue mt-1 text-[10px] shrink-0"></i> <span>(X5) การเสริมแรงเพื่อรักษาพฤติกรรมการทำงานที่พึงประสงค์</span></li>
+                </ul>
+                <div class="absolute bottom-8 right-8 text-4xl text-white/5"><i class="fa-solid fa-user-tie"></i></div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-6 p-8 sm:p-10 reveal delay-100" onclick="openDetail('var-y')">
+                <p class="text-xs font-semibold text-text_gray uppercase tracking-widest mb-2">ตัวแปรตาม (Y)</p>
+                <h3 class="text-2xl sm:text-3xl font-semibold tracking-tight-custom mb-6 text-white leading-tight">พฤติกรรมเชิงนวัตกรรม<br><span class="text-lg text-text_gray font-normal">ในการทำงานของครู</span></h3>
+                <ul class="space-y-3 text-sm sm:text-base text-text_gray">
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-lightbulb text-accent_orange mt-1 text-[10px] shrink-0"></i> <span>(Y1) การสำรวจโอกาสใหม่</span></li>
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-lightbulb text-accent_orange mt-1 text-[10px] shrink-0"></i> <span>(Y2) การสร้างแนวคิดใหม่</span></li>
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-lightbulb text-accent_orange mt-1 text-[10px] shrink-0"></i> <span>(Y3) การทำให้แนวคิดเป็นที่ยอมรับ</span></li>
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-lightbulb text-accent_orange mt-1 text-[10px] shrink-0"></i> <span>(Y4) การนำแนวคิดไปปฏิบัติ</span></li>
+                    <li class="flex items-start gap-3"><i class="fa-solid fa-lightbulb text-accent_orange mt-1 text-[10px] shrink-0"></i> <span>(Y5) การสะท้อนคิดเพื่อความยั่งยืน</span></li>
+                </ul>
+                <div class="absolute bottom-8 right-8 text-4xl text-white/5"><i class="fa-solid fa-microchip"></i></div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-4 p-8 flex flex-col justify-between h-[250px] reveal" onclick="openDetail('stat-mean')">
+                <p class="text-xs font-semibold text-text_gray uppercase tracking-widest">ระดับการปฏิบัติ</p>
+                <div>
+                    <div class="flex items-end gap-4 mb-3">
+                        <div>
+                            <span class="text-4xl font-bold text-white block"><span class="text-xl stat-symbol">x̄</span> 4.40</span>
+                            <span class="text-[10px] text-text_gray uppercase leading-tight block mt-1">ภาวะผู้นำ<br>การเปลี่ยนแปลงฯ</span>
+                        </div>
+                        <div class="w-px h-10 bg-white/10 mb-1"></div>
+                        <div>
+                            <span class="text-4xl font-bold text-white block"><span class="text-xl stat-symbol">x̄</span> 4.41</span>
+                            <span class="text-[10px] text-text_gray uppercase leading-tight block mt-1">พฤติกรรม<br>เชิงนวัตกรรมฯ</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-text_gray">ภาพรวมอยู่ในระดับ <strong class="text-white">"มาก"</strong> ทั้งสองตัวแปร</p>
+                </div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-4 p-8 flex flex-col justify-between h-[250px] reveal delay-100" onclick="openDetail('stat-diff')">
+                <p class="text-xs font-semibold text-text_gray uppercase tracking-widest">การเปรียบเทียบ (Sig < .05)</p>
+                <div class="space-y-3">
+                    <div class="bg-black/50 p-3 rounded-xl border border-white/5">
+                        <p class="text-[11px] text-text_gray mb-1"><i class="fa-solid fa-mars text-accent_blue"></i> เพศ (t-test)</p>
+                        <p class="text-sm text-white font-medium">ชาย > หญิง <span class="text-[10px] font-normal text-text_gray block mt-0.5 leading-tight">(การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์)</span></p>
+                    </div>
+                    <div class="bg-black/50 p-3 rounded-xl border border-white/5">
+                        <p class="text-[11px] text-text_gray mb-1"><i class="fa-solid fa-school text-accent_orange"></i> ขนาดโรงเรียน (ANOVA)</p>
+                        <p class="text-sm text-white font-medium">เล็ก > กลาง <span class="text-[10px] font-normal text-text_gray block mt-0.5 leading-tight">(พฤติกรรมเชิงนวัตกรรมในภาพรวม)</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-4 p-8 flex flex-col justify-between h-[250px] reveal delay-200" onclick="openDetail('stat-corr')">
+                <p class="text-xs font-semibold text-text_gray uppercase tracking-widest">ความสัมพันธ์ (r)</p>
+                <div>
+                    <span class="text-6xl font-bold tracking-tight text-gradient-secondary mb-2 block"><span class="text-4xl stat-symbol">r</span>.637</span>
+                    <p class="text-sm text-text_gray font-light">มีความสัมพันธ์ทางบวกระดับ <strong class="text-white">สูง</strong></p>
+                    <p class="text-[10px] text-red-400 mt-1">Sig < .01</p>
+                </div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-12 p-0 h-auto sm:h-[450px] flex flex-col md:flex-row items-center reveal relative group" onclick="open3DGraph()">
+                <div class="p-8 sm:p-12 w-full md:w-[50%] z-10 flex flex-col justify-center h-full bg-gradient-to-r from-[#1d1d1f] via-[#1d1d1f] to-[#1d1d1f]/90">
+                    <p class="text-xs font-semibold text-accent_blue uppercase tracking-widest mb-3">Multiple Regression</p>
+                    <h3 class="text-5xl sm:text-6xl font-bold tracking-tight-custom mb-2 text-white">41.40%</h3>
+                    <p class="text-sm sm:text-base text-text_gray mb-6 font-light leading-relaxed">
+                        พลังการพยากรณ์ <span class="stat-symbol text-white">R²</span> = .414 <br>
+                        ค้นพบ <strong class="text-white">4 ตัวพยากรณ์</strong> ที่ขับเคลื่อนนวัตกรรม (X5 ไม่พยากรณ์)
+                    </p>
+                    <div class="flex items-center gap-2 text-sm text-white font-medium hover:text-accent_blue transition w-max">
+                        <i class="fa-solid fa-cube text-xl"></i> แตะเพื่อดูโมเดล 3D แบบละเอียด
+                    </div>
+                </div>
+                <div class="hidden md:block absolute right-0 top-0 w-[50%] h-full overflow-hidden opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                    <div class="absolute bottom-10 right-10 flex items-end gap-4 transform rotate-[-10deg] scale-110">
+                        <div class="w-12 bg-gradient-to-t from-[#ff7a18] to-[#ff9e5e] rounded-t-xl shadow-2xl" style="height: 209px;"></div> <div class="w-12 bg-gradient-to-t from-[#86868b] to-[#a1a1a6] rounded-t-xl shadow-2xl" style="height: 194px;"></div> <div class="w-12 bg-gradient-to-t from-[#2997ff] to-[#60b0ff] rounded-t-xl shadow-2xl" style="height: 176px;"></div> <div class="w-12 bg-gradient-to-t from-[#2dd4bf] to-[#5eead4] rounded-t-xl shadow-2xl" style="height: 159px;"></div> </div>
+                </div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-12 p-8 sm:p-12 reveal text-center flex flex-col items-center justify-center bg-gradient-to-b from-[#1d1d1f] to-[#0a0a0a]" onclick="openDetail('conclusion')">
+                <i class="fa-solid fa-bullseye text-4xl mb-6 text-accent_orange opacity-80"></i>
+                <h3 class="text-xl sm:text-2xl font-medium tracking-tight-custom leading-relaxed max-w-4xl text-text_light">
+                    "ปัจจัยสำคัญที่จะกระตุ้นให้นวัตกรรมเกิดในโรงเรียน คือ ผู้บริหารต้อง 
+                    <span class="text-accent_orange font-semibold">การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</span> และ 
+                    <span class="text-accent_orange font-semibold">การสนับสนุนศักยภาพรายบุคคล</span> เพื่อให้ครูกล้าคิดและลงมือปฏิบัติจริง"
+                </h3>
+                <p class="text-[10px] text-text_gray mt-6 uppercase tracking-widest border-t border-white/10 pt-4">Key Takeaway</p>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Data strictly verified with the document
+        const infoData = {
+            'var-x': {
+                icon: 'fa-cogs', title: 'ตัวแปรอิสระ (X): ภาวะผู้นำการเปลี่ยนแปลงของผู้บริหารสถานศึกษา',
+                content: `
+                    <div class="space-y-4">
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(X1) การเป็นแบบอย่างที่มีอุดมการณ์:</strong> ผู้บริหารปฏิบัติตนสอดคล้องกับสิ่งที่พูดอย่างสม่ำเสมอ แสดงออกถึงความเสียสละ</div>
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(X2) การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์:</strong> ถ่ายทอดเรื่องราวหรือประสบการณ์ที่สร้างแรงบันดาลใจให้ครูรู้สึกอยากร่วมกันผลักดันวิสัยทัศน์ของสถานศึกษาให้เป็นจริง</div>
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(X3) การกระตุ้นทางปัญญา:</strong> ส่งเสริมให้ครูนำข้อมูลผลการเรียนรู้ของนักเรียนมาใช้วิเคราะห์เพื่อสะท้อนผล และพัฒนางานร่วมกัน</div>
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(X4) การสนับสนุนศักยภาพรายบุคคล:</strong> มอบหมายโครงการให้ครูเป็นผู้รับผิดชอบหลัก และให้อำนาจครูตัดสินใจเพื่อให้โครงการสำเร็จลุล่วง</div>
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(X5) การเสริมแรงเพื่อรักษาพฤติกรรมการทำงานที่พึงประสงค์:</strong> ยกย่องชมเชยครูเมื่อมีผลการปฏิบัติงานที่ดี</div>
+                    </div>`
+            },
+            'var-y': {
+                icon: 'fa-lightbulb', title: 'ตัวแปรตาม (Y): พฤติกรรมเชิงนวัตกรรมในการทำงานของครู',
+                content: `
+                    <div class="space-y-4">
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(Y1) การสำรวจโอกาสใหม่:</strong> ครูวิเคราะห์ปัญหาการเรียนรู้ของนักเรียน หรือปัญหาในชั้นเรียนเพื่อหาต้นตอและแนวทางแก้ไข</div>
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(Y2) การสร้างแนวคิดใหม่:</strong> ครูพัฒนาแนวคิดใหม่ ๆ โดยมีเป้าหมายที่ชัดเจนเพื่อแก้ไขปัญหาการเรียนรู้ของนักเรียนในชั้นเรียน</div>
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(Y3) การทำให้แนวคิดเป็นที่ยอมรับ:</strong> ครูปรึกษาหารือกับผู้บริหารเพื่อขอการสนับสนุนด้านงบประมาณหรือทรัพยากรที่จำเป็นต่อการทำกิจกรรมใหม่ๆ</div>
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(Y4) การนำแนวคิดไปปฏิบัติ:</strong> ครูประเมินผลการใช้นวัตกรรมใหม่โดยเก็บข้อมูลจากนักเรียนเพื่อนำมาสะท้อนผลและพัฒนาต่อยอด</div>
+                        <div class="bg-black/50 p-4 rounded-2xl border border-white/5"><strong class="text-white block mb-1">(Y5) การสะท้อนคิดเพื่อความยั่งยืน:</strong> ครูทบทวน และสะท้อนผลการใช้นวัตกรรมการสอนร่วมกับเพื่อนครูเพื่อหาข้อดีและข้อควรพัฒนา</div>
+                    </div>`
+            },
+            'stat-mean': {
+                icon: 'fa-gauge-high', title: 'การแปลผล: สถิติพื้นฐาน',
+                content: `
+                    <p class="text-white font-medium text-lg mb-2">ภาพรวมการปฏิบัติอยู่ในระดับ "มาก"</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>ภาวะผู้นำการเปลี่ยนแปลงของผู้บริหารสถานศึกษา ภาพรวมอยู่ในระดับมาก (<span class="stat-symbol">x̄</span> = 4.40)</li>
+                        <li>พฤติกรรมเชิงนวัตกรรมในการทำงานของครู ภาพรวมอยู่ในระดับมาก (<span class="stat-symbol">x̄</span> = 4.41)</li>
+                        <li><em>*ด้านที่มีค่าเฉลี่ยสูงสุดในฝั่งตัวแปรตาม คือ การสำรวจโอกาสใหม่ (<span class="stat-symbol">x̄</span> = 4.50) ซึ่งปฏิบัติอยู่ในระดับมากที่สุด</em></li>
+                    </ul>`
+            },
+            'stat-diff': {
+                icon: 'fa-chart-column', title: 'การแปลผล: การเปรียบเทียบความแตกต่าง',
+                content: `
+                    <div class="space-y-4">
+                        <div class="bg-black/50 p-5 rounded-2xl border border-white/5">
+                            <strong class="text-white block mb-2"><i class="fa-solid fa-venus-mars text-accent_blue w-5"></i> t-test (จำแนกตามเพศของผู้บริหาร)</strong>
+                            ผู้บริหารสถานศึกษาเพศชาย มีภาวะผู้นำด้าน "การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์" สูงกว่าผู้บริหารเพศหญิง อย่างมีนัยสำคัญทางสถิติที่ระดับ .05
+                        </div>
+                        <div class="bg-black/50 p-5 rounded-2xl border border-white/5">
+                            <strong class="text-white block mb-2"><i class="fa-solid fa-school text-accent_orange w-5"></i> ANOVA (จำแนกตามขนาดโรงเรียน)</strong>
+                            ครูจากโรงเรียนขนาดเล็ก มีพฤติกรรมเชิงนวัตกรรมในการทำงานในภาพรวม สูงกว่า ครูจากโรงเรียนขนาดกลาง อย่างมีนัยสำคัญทางสถิติที่ระดับ .05
+                        </div>
+                    </div>`
+            },
+            'stat-corr': {
+                icon: 'fa-link', title: 'การแปลผล: การวิเคราะห์ความสัมพันธ์ (Correlation)',
+                content: `
+                    <p class="text-white font-medium text-lg mb-2">มีความสัมพันธ์ทางบวกในระดับสูง (r = .637)</p>
+                    <p class="leading-relaxed">ความสัมพันธ์ระหว่างภาวะผู้นำการเปลี่ยนแปลงของผู้บริหารสถานศึกษากับพฤติกรรมเชิงนวัตกรรมในการทำงานของครู มีความสัมพันธ์ทางบวกในระดับสูง อย่างมีนัยสำคัญทางสถิติที่ระดับ .01 <br><br>หมายความว่า เมื่อผู้บริหารสถานศึกษาแสดงพฤติกรรมภาวะผู้นำการเปลี่ยนแปลงเพิ่มขึ้น จะส่งผลให้ครูแสดงพฤติกรรมเชิงนวัตกรรมเพิ่มขึ้นตามไปด้วย</p>`
+            },
+            'conclusion': {
+                icon: 'fa-flag-checkered', title: 'สมการการถดถอยพหุคูณ (Multiple Regression)',
+                content: `
+                    <p class="leading-relaxed text-base">
+                        สามารถสร้างสมการพยากรณ์ในรูปคะแนนมาตรฐาน (<span class="stat-symbol">β</span>) ได้ดังนี้:
+                        <span class="font-mono text-[10px] sm:text-xs bg-black/50 p-3 rounded-xl block mt-3 mb-4 border border-white/10 text-accent_orange text-center leading-relaxed">
+                            Y' = .176(X1) + .209(X2) + .159(X3) + .194(X4) + .077(X5)
+                        </span>
+                        โดยตัวแปร X5 (การเสริมแรงเพื่อรักษาพฤติกรรมการทำงานที่พึงประสงค์) <u class="text-red-400">ไม่ได้เป็นตัวพยากรณ์</u>ที่ส่งผลต่อพฤติกรรมเชิงนวัตกรรมของครูในภาพรวม อย่างมีนัยสำคัญทางสถิติ
+                    </p>`
+            }
+        };
+
+        function openDetail(key) {
+            const data = infoData[key];
+            if (!data) return;
+            document.getElementById('modal-icon').className = `w-12 h-12 rounded-full flex items-center justify-center text-xl bg-white/10 text-white shrink-0 fa-solid ${data.icon}`;
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-body').innerHTML = data.content;
+            document.getElementById('modal-overlay').classList.add('show-modal');
+            document.body.style.overflow = 'hidden';
+            
+            const canvasContainer = document.getElementById('threejs-canvas');
+            if(canvasContainer) canvasContainer.remove();
+        }
+
+        // --- 3D THREE.JS FOR REGRESSION (4 Predictors) ---
+        let animationId, scene, camera, renderer, barMeshes = [];
+        
+        function open3DGraph() {
+            document.getElementById('modal-icon').className = `w-12 h-12 rounded-full flex items-center justify-center text-xl bg-white/10 text-white shrink-0 fa-solid fa-cube`;
+            document.getElementById('modal-title').innerText = "ตัวพยากรณ์ที่ดีที่สุด (Predictors)";
+            
+            document.getElementById('modal-body').innerHTML = `
+                <p class="text-sm font-medium text-white mb-3">ตัวแปรอิสระร่วมกันพยากรณ์พฤติกรรมเชิงนวัตกรรมได้ร้อยละ 41.40 (R² = .414)</p>
+                <div class="space-y-2 text-xs sm:text-sm text-text_gray mb-4 font-mono border-b border-white/10 pb-4">
+                    <div class="flex justify-between items-center gap-2"><span class="truncate">1. (X2) การสร้างแรงบันดาลใจร่วมต่อวิสัยทัศน์</span> <strong class="text-accent_orange shrink-0">β = .209**</strong></div>
+                    <div class="flex justify-between items-center gap-2"><span class="truncate">2. (X4) การสนับสนุนศักยภาพรายบุคคล</span> <strong class="text-accent_gray shrink-0">β = .194**</strong></div>
+                    <div class="flex justify-between items-center gap-2"><span class="truncate">3. (X1) การเป็นแบบอย่างที่มีอุดมการณ์</span> <strong class="text-accent_blue shrink-0">β = .176**</strong></div>
+                    <div class="flex justify-between items-center gap-2"><span class="truncate">4. (X3) การกระตุ้นทางปัญญา</span> <strong class="text-accent_teal shrink-0">β = .159**</strong></div>
+                </div>
+                <div id="threejs-canvas" class="rounded-2xl overflow-hidden relative h-[280px] sm:h-[350px] w-full bg-[#000000] border border-white/10 cursor-move">
+                    <div class="absolute bottom-2 left-2 right-2 flex justify-between gap-1 z-10 pointer-events-none">
+                        <div class="bg-[#1d1d1f]/90 backdrop-blur px-1 sm:px-2 py-1.5 rounded-lg text-center flex-1 border border-white/10 flex flex-col justify-between"><div class="text-[8px] text-gray-500 uppercase mb-1">Rank 1</div><div class="text-[9px] sm:text-[10px] font-medium text-white leading-tight mb-1">การสร้างแรง<br>บันดาลใจฯ (X2)</div><div class="text-[10px] font-bold text-accent_orange">β .209</div></div>
+                        <div class="bg-[#1d1d1f]/90 backdrop-blur px-1 sm:px-2 py-1.5 rounded-lg text-center flex-1 border border-white/10 flex flex-col justify-between"><div class="text-[8px] text-gray-500 uppercase mb-1">Rank 2</div><div class="text-[9px] sm:text-[10px] font-medium text-white leading-tight mb-1">การสนับสนุน<br>ศักยภาพฯ (X4)</div><div class="text-[10px] font-bold text-accent_gray">β .194</div></div>
+                        <div class="bg-[#1d1d1f]/90 backdrop-blur px-1 sm:px-2 py-1.5 rounded-lg text-center flex-1 border border-white/10 flex flex-col justify-between"><div class="text-[8px] text-gray-500 uppercase mb-1">Rank 3</div><div class="text-[9px] sm:text-[10px] font-medium text-white leading-tight mb-1">การเป็นแบบ<br>อย่างฯ (X1)</div><div class="text-[10px] font-bold text-accent_blue">β .176</div></div>
+                        <div class="bg-[#1d1d1f]/90 backdrop-blur px-1 sm:px-2 py-1.5 rounded-lg text-center flex-1 border border-white/10 flex flex-col justify-between"><div class="text-[8px] text-gray-500 uppercase mb-1">Rank 4</div><div class="text-[9px] sm:text-[10px] font-medium text-white leading-tight mb-1">การกระตุ้นทาง<br>ปัญญา (X3)</div><div class="text-[10px] font-bold text-accent_teal">β .159</div></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-overlay').classList.add('show-modal');
+            document.body.style.overflow = 'hidden';
+            setTimeout(initThreeJS, 100);
+        }
+
+        function initThreeJS() {
+            const container = document.getElementById('threejs-canvas');
+            if (!container) return;
+            const w = container.clientWidth, h = container.clientHeight;
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 1000);
+            camera.position.set(0, 10, 22);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const spotLight = new THREE.SpotLight(0xffffff, 2);
+            spotLight.position.set(10, 20, 10);
+            scene.add(spotLight);
+
+            // Grid
+            const grid = new THREE.GridHelper(20, 20, 0x1d1d1f, 0x1d1d1f);
+            grid.position.y = -0.5;
+            scene.add(grid);
+
+            // 4 Predictors Data
+            const data = [
+                { beta: 0.209, color: 0xff7a18 }, // X2
+                { beta: 0.194, color: 0x86868b }, // X4
+                { beta: 0.176, color: 0x2997ff }, // X1
+                { beta: 0.159, color: 0x2dd4bf }  // X3
+            ];
+
+            barMeshes = [];
+            data.forEach((item, index) => {
+                const geo = new THREE.CylinderGeometry(0.7, 0.7, 1, 32);
+                const mat = new THREE.MeshPhysicalMaterial({ color: item.color, metalness: 0.3, roughness: 0.2, clearcoat: 0.5 });
+                const bar = new THREE.Mesh(geo, mat);
+                // Center 4 items
+                bar.position.set((index - 1.5) * 2.8, -0.5, 0); // slightly more spaced out
+                bar.scale.y = 0.01; 
+                scene.add(bar);
+                barMeshes.push({ mesh: bar, targetY: item.beta * 40 }); 
+            });
+
+            let isDragging = false, prevMouse = {x:0,y:0}, rotX = 0.2, rotY = -0.2;
+            
+            container.addEventListener('mousedown', () => isDragging = true);
+            container.addEventListener('mousemove', e => {
+                if (isDragging) {
+                    rotY += (e.offsetX - prevMouse.x) * 0.01;
+                    rotX += (e.offsetY - prevMouse.y) * 0.01;
+                    rotX = Math.max(-0.2, Math.min(1.0, rotX));
+                }
+                prevMouse = { x: e.offsetX, y: e.offsetY };
+            });
+            window.addEventListener('mouseup', () => isDragging = false);
+            
+            container.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }, {passive: true});
+            container.addEventListener('touchmove', (e) => {
+                if (isDragging) {
+                    rotY += (e.touches[0].clientX - prevMouse.x) * 0.01;
+                    rotX += (e.touches[0].clientY - prevMouse.y) * 0.01;
+                    rotX = Math.max(-0.2, Math.min(1.0, rotX));
+                    prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            }, {passive: true});
+            window.addEventListener('touchend', () => isDragging = false);
+
+            window.addEventListener('resize', () => {
+                if (container && camera && renderer) {
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            });
+
+            function render() {
+                if(!document.getElementById('threejs-canvas')) return;
+                animationId = requestAnimationFrame(render);
+                
+                barMeshes.forEach(b => {
+                    b.mesh.scale.y += (b.targetY - b.mesh.scale.y) * 0.05;
+                    b.mesh.position.y = (b.mesh.scale.y / 2) - 0.5; 
+                });
+                
+                if (!isDragging) rotY -= 0.002;
+                
+                camera.position.x = 22 * Math.sin(rotY) * Math.cos(rotX);
+                camera.position.y = 22 * Math.sin(rotX) + 2;
+                camera.position.z = 22 * Math.cos(rotY) * Math.cos(rotX);
+                camera.lookAt(0, 3, 0);
+                
+                renderer.render(scene, camera);
+            }
+            render();
+        }
+
+        function closeModal(e) {
+            if (e && e.target.id !== 'modal-overlay' && !e.target.closest('button')) return;
+            document.getElementById('modal-overlay').classList.remove('show-modal');
+            document.body.style.overflow = 'auto';
+            if(animationId) cancelAnimationFrame(animationId);
+        }
+
+        // --- Animations ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('active');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
